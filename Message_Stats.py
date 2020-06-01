@@ -7,7 +7,7 @@ from html.parser import HTMLParser
 from html.entities import name2codepoint
 from operator import itemgetter
 from natsort import natsort_key, natsorted, ns
-from datetime import datetime
+from datetime import datetime, date
 import emoji
 
 class MyHTMLParser(HTMLParser):
@@ -201,8 +201,9 @@ def create_stats(data_list):
         num_consecutive_days, start_date, end_date = consecutive_days_msged(daily_stats)
         consecutive_days = [num_consecutive_days, start_date, end_date]
         max_one_day_msg_count = max_one_day_msg(daily_stats)
+        person_sent_most_msgs = sent_most_msgs_per_day(date_stats)
         general_stats = [msged_first, total_msg_count, title]
-        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count])
+        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count, person_sent_most_msgs])
     return stats
 
 def sort_stats(stats, element_to_sort, num_elements_to_sort, reverse_sort_order):
@@ -244,8 +245,20 @@ def consecutive_days_msged(daily_stats):
             end_date = curr_end_date
     return max_consecutive_days_msged, start_date, end_date
 
-def date_stats(date_stats):
-    return 0
+def sent_most_msgs_per_day(date_stats):
+    max_msgs_per_day = dict()
+    max_person_count_per_day = dict()
+    for name in date_stats:
+        for dates in date_stats[name]:
+            if dates[0] not in max_msgs_per_day:
+                max_msgs_per_day[dates[0]] = [name, dates[1]]
+            elif dates[1] > max_msgs_per_day[dates[0]][1]:
+                max_msgs_per_day[dates[0]] = [name, dates[1]]
+    for key, value in max_msgs_per_day.items():
+        add_count_to_dict(value[0], max_person_count_per_day)
+    list = max_person_count_per_day.items()
+    list = sorted(list, key=lambda x:x[0])
+    return list
     
 def create_file_list(rootdir):
     rootdir = rootdir
@@ -461,6 +474,7 @@ def write_stats(path_list, stats_list):
         consecutive_days = stats_list[i][9]
         people_who_msged_in_convo = stats_list[i][10]
         max_one_day_msg_count = stats_list[i][11]
+        person_sent_most_msgs = stats_list[i][12]
         stats = codecs.open(path_list[i] + "stats.txt", "w", "utf-8")
         stats.write("Chat with: " + title + "\n")
         stats.write("First ever message was sent by: " + first_msg + "\n")
@@ -501,33 +515,27 @@ def write_stats(path_list, stats_list):
                     stats.write(" time\n")
                 else:
                     stats.write(" times\n")
-        # stats.write("\nDaily Messages Sent:\n")
-        # for name in date_stats:
-            # stats.write(name + ":\n")
-            # for dates in date_stats[name]:
-                # stats.write(str(dates[1]))
-                # if dates[1] == 1:
-                    # stats.write(" message ")
-                # else:
-                    # stats.write(" messages ")
-                # stats.write("were sent on " + str(dates[0]) + "\n")
+        total_days_msged = sum(x[1] for x in person_sent_most_msgs)
+        stats.write("\n")
+        for person in person_sent_most_msgs:
+            stats.write(person[0] + " sent the most messages in " + str(person[1]) + " days, accounting for " + "{0:.2f}".format(person[1]/total_days_msged*100) + " percent of all days\n")
         stats.write("\nMax Number Messages Sent in one day: " + str(max_one_day_msg_count[1]) + " on " + str(max_one_day_msg_count[0]) + "\n")
         stats.write("\nCombined Monthly Messages Sent:\n")
         for dates in monthly_stats:
             stats.write(str(dates[1]))
             if dates[1] == 1:
-                stats.write(" message ")
+                stats.write(" message was ")
             else:
-                stats.write(" messages ")
-            stats.write("were sent in " + dates[0].strftime("%b %Y") + "\n")
+                stats.write(" messages were ")
+            stats.write("sent in " + dates[0].strftime("%b %Y") + "\n")
         stats.write("\nCombined Yearly Messages Sent:\n")
         for dates in yearly_stats:
             stats.write(str(dates[1]))
             if dates[1] == 1:
-                stats.write(" message ")
+                stats.write(" message was ")
             else:
-                stats.write(" messages ")
-            stats.write("were sent in " + str(dates[0].year) + "\n")
+                stats.write(" messages were ")
+            stats.write("sent in " + str(dates[0].year) + "\n")
         stats.write("Max consecutive days msged is " + str(consecutive_days[0]) + "\n")
         stats.write("Achieved during the time frame " + str(consecutive_days[1]) + " to " + str(consecutive_days[2]) + "\n")
         stats.close()
@@ -554,7 +562,7 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
 def main():
     rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\JessicaZhang_Zs11Uy-bpw'
     #if you don't want to search for a msg, leave it as ""
-    msg_to_search_for = "movie"
+    msg_to_search_for = ""
     #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
     #if you do want a time range for the search function, change the time to datetime(year, month, day)
     start_date = datetime.min
