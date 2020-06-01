@@ -85,6 +85,19 @@ def add_count_to_dict(key, dict):
     else:
         dict[key] = 1
 
+def create_search_list(data_list, msg_to_search_for, start_date, end_date):
+    search_list = []
+    for data in data_list:
+        del data[-1]
+        search = []
+        for message in data:
+            msg = message[1]
+            date_time = datetime.strptime(message[2], "%b %d, %Y, %I:%M %p")
+            if msg_to_search_for.lower() in msg.lower() and date_time >= start_date and date_time <= end_date:
+                search.insert(0, message)
+        search_list.append([search])
+    return search_list
+
 def create_stats(data_list):
     stats = []
     for data in data_list:
@@ -516,9 +529,34 @@ def write_stats(path_list, stats_list):
         stats.write("Max consecutive days msged is " + str(consecutive_days[0]) + "\n")
         stats.write("Achieved during the time frame " + str(consecutive_days[1]) + " to " + str(consecutive_days[2]) + "\n")
         stats.close()
-    
+
+def write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date):
+    for i in range(0, len(path_list)):
+        search = search_list[i][0]
+        write_search = codecs.open(path_list[i] + "search.txt", "w", "utf-8")
+        match = ""
+        if len(search) == 0:
+            match = "No matches were "
+        elif len(search) == 1:
+            match = "1 match was "
+        else:
+            match = str(len(search)) + " matches were "
+        write_search.write(match + "found for the word '" + msg_to_search_for + "' during the period " + str(start_date.date()) + " to " + str(end_date.date()) + "\n")
+        for msgs_found in search:
+            name = msgs_found[0]
+            msg = msgs_found[1]
+            time = msgs_found[2]
+            write_search.write(name + " at " + str(time) + ": " + msg + "\n")
+    write_search.close()
+
 def main():
-    rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\'
+    rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\JessicaZhang_Zs11Uy-bpw'
+    #if you don't want to search for a msg, leave it as ""
+    msg_to_search_for = "movie"
+    #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
+    #if you do want a time range for the search function, change the time to datetime(year, month, day)
+    start_date = datetime.min
+    end_date = datetime.max
     print("Creating file list")
     file_list, path_list = create_file_list(rootdir)
     print("Parsing file list")
@@ -528,11 +566,17 @@ def main():
     stats_list = create_stats(data_list)
     print("Writing stats to files")
     write_stats(path_list, stats_list)
-    total_stats_list = combined_stats_list(stats_list)
-    write_total_stats(rootdir, total_stats_list)
+    if msg_to_search_for != "":
+        print("Searching for keyword")
+        search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
+        print("Writing search results to files")
+        write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
+    if len(stats_list) > 1:
+        total_stats_list = combined_stats_list(stats_list)
+        write_total_stats(rootdir, total_stats_list)
     
 def plot_graph():
-    count_per_person_dm = {'Jeff Lai': 432683, 'Aaron Hum': 85, 'Aaron Tan': 341, 'Abdullah Khan': 34, 'Abhinav Chanda': 8, 'Adrian Carpenter': 178, 'Agathe Merceron': 142, 'Ahmed Abdulkadir': 125, 'Aidan Lui': 3, 'Aidan Tsang': 1, 'Akshaya Venkatesh': 200, 'Alan Chen': 1, 'Alexander Woo': 497, 'Alex Barkin': 59, 'Alexei Tsybulsky': 3, 'Alexis Chen': 188, 'Alex Wang': 2461, 'Aliana Versi': 10, 'Alice Liuu': 9, 'Alice Peng': 180, 'Alice Zhou': 8, 'Alicia Ng': 17, 'Ali Isnotonfire': 9, 'Aloïse Delizy': 29, 'Amal Yusuf': 19, 'Amaris He': 200, 'Amio Rahman': 181, 'Amy Liu': 1977, 'Amy Luo': 914, 'Andrée Tsoungui': 208, 'Andrew Daly': 9, 'Andy Rei Kou': 34, 'Nicholas Kwong': 118, 'Angela Yu': 14, 'Angel Cai': 3358, 'Anita Ning': 58, 'Anna Wang': 3782, 'Anne-Charlotte Plessy': 1, 'Anne Marie Klein': 4, 'Anson Wong': 153, 'Anthony Chang': 18, 'Anushka Birla': 27, 'Arjun Bhushan': 12, 'Arooj Asrar': 1, 'Arqum Latif': 2, 'Ashiqa Boo': 14, 'Astrid Popescu': 235, 'Austin Jiang': 4, 'Austin Kranc': 3, 'Avi Fischer': 4, 'Aviv PB': 43, 'Baptiste Simon': 6, 'Ben Iain Morehead': 59, 'Benjamin Duo': 739, 'Benjamin Griffith': 3, 'Ben Zhang': 458, 'Bernard Lucas': 37, 'Bilawal Nisar': 3, 'Billy Li': 1, 'Bilun Sun': 245, 'Bob Bao': 1, 'Brandon Hum': 10, 'Brendan Arciszewski': 23, 'Brendan Johnston': 2, 'Brendan Zhang': 5, 'Brian Yeung': 51, 'Brooke Ellis': 221, 'Bruce Kuwahara': 11, 'Bryant Ng': 167, 'Caitlin Annan': 6, 'Jessica Zhang': 32773, 'Caleb Tseng-Tham': 2665, 'Callum Moffat': 92, 'Camille Chiron': 129, 'Camille Tsang': 8708, 'Candy Liu': 1, 'Cara de Belle': 1, 'Carla Da Costa': 7, 'Caroline Bld': 5, 'Carrie Chen': 386, 'Cathy Li': 1282, 'Charles Hunter': 20, 'Charles Yu': 19, 'Cherie Chan': 29, 'Chris Ji': 218, 'Chris Thi': 91, 'Christian Wai-Forssell': 2, 'Christie Ma': 13, 'Christina Lim': 8, 'Christina Lin': 151, 'Christopher Sheedy': 61, 'Christopher Song': 152, 'Chuqian Susan Li': 6, 'Cindy DoubleveeYou': 1254, 'Cindy Wei': 2, 'Cody Zhang': 18, 'Daniela Garcia Orellana': 8, 'Daniel Ding': 46, 'Daniel Goldstein': 3, 'Daniel Ku': 4, 'Daniell Yang': 3, 'Daniel Tran': 104, 'Dan Nguyen': 1, 'Darian Ho': 9, 'Gene Liang': 1915, 'David Li': 48, 'Dennis Deng': 1, 'Dorian Cailleau': 1, 'Dove Bhuiyan': 17, 'Duncan Bennie': 66, 'Elbert Lai': 1483, 'Elena Andreev': 27, 'Elina Ma': 7052, 'Elin Liu': 27725, 'Emilien Tison': 77, 'Emily Yu': 125, 'Emma Bazantay': 3, 'Emma Kawczy': 240, 'Emon Sen Majumder': 8, 'Erica Gun': 4, 'Eric Wang': 2, 'Erika Cao': 142, 'Erika Narimatsu': 54163, 'Erin Leung': 131, 'Eugene Wang': 38, 'Eva-Marie Turpin': 27, 'Evan Kim': 72, 'Eva Retailleau-Morille': 15, 'Evelyn Vo': 121, 'EverWing': 281, 'Facebook User': 602, 'Faisal Khan': 4, 'Farhan Khan': 21, 'Felicia Jiang': 4557, 'Felix Sung': 309, 'Felix Wong': 121, 'Fouzia Shoily Ahsan': 37, 'Francois Barnard': 3, 'Frank Christian Wang': 3, 'Gabriel Kwan': 2, 'Ganashsai Vannithamby': 2, 'Gary Ye': 19, 'Gauvain Guern': 4, 'Geetha Jeyapragasan': 571, 'Gillian Giovannetti': 111, 'Girik Sur': 1, 'Glen Gong': 6, "Grace 'Graceface' Xu": 23, 'Hannah Rosenberg': 24, 'Haseeb Akram': 1, 'Hasib Ahmed': 1, 'Helen Lin': 729, 'Hillary Chan': 533, 'Hohyun Ryu': 4, 'Houston Tsui': 126, 'Hussain Shah': 46, 'Ignatius Sinn': 404, 'Igor Jovanović': 845, 'Irene Chen': 446, 'Irene Situ': 11, 'Iris Zou': 6, 'Isaac Chang': 558, 'Isabela Hernandes': 25, 'Isabel Hu': 703, 'Isabelle Li': 6, 'Issac Mathew': 44, 'Jack Cygness': 121, 'Jack Dai': 4, 'Jackie Du': 38, 'Jack Ruan': 98, 'Jacky Ho': 3, 'Jacob Kelly': 6, 'Jaehyung Park': 18, 'Jae Woo Jun': 15, 'Jake Muchynski': 18, 'Jameson Weng': 9, 'Jamie Dang': 11, 'Jamie Tang': 238, 'Jason  Jiang': 3, 'Jason Maximillian Elsted': 41, 'Jason Zhao': 49, 'Jawad Noor': 1, 'Chris Xi': 3, 'Rahim Baird': 2, 'Derek Yates': 3, 'Jeff Ma': 9, 'Jennie Xu': 131, 'Jennifer Anderson': 18, 'Jennifer Xie': 20, 'Jenny Huynh': 1944, 'Jenny Ly': 641, 'Jesse Becerra': 11, 'Jessica Kwong': 11071, 'Jessy de Leeuw': 8227, 'Jingchun Jackie Wang': 9, 'Jin Liang': 629, 'Joanna Tang': 2, 'Joey Hung': 3, 'Joey Kuang': 274, 'John Albert': 2, 'John Huang': 29, 'John Pan': 10, 'Jonah Ho': 3, 'Jonah William Kim': 15, 'Jonathan Chang': 154, 'Jordan Fung': 134, 'Joseph Huang': 7, 'Josephine Chan': 7, 'Josh Liu': 27, 'Joshua Sukhra': 56, 'Julia Garbe': 70, 'Julia Gorbet': 199, 'Julie Bondu': 226, 'Justin Lai': 738, 'Justin Li': 99, 'Justin Lu': 41, 'Amber Tsetsos': 1, 'Kai Ostermann': 96, 'Kaitlyn Tse': 573, 'Keith Lai': 680, 'Kelly Chu': 30, 'Kelvin Vuu': 429, 'Kenneth Tjie': 1, 'Ken Ny': 5243, 'Kevin An': 1, 'Kevin LeeZh': 22, 'Kevin Lu': 19, 'Kevin Mathew Mukalel': 53, 'Kevin Wang': 5, 'King Chan': 34, 'Kingsley Chu': 673, 'Kin Ping Ng': 4, 'Kishan Rampersad': 23, 'Kyle Cox': 116, 'Kyle Robinson': 5, 'Langni Zeng': 901, 'Lan Jing Li': 3, 'Lanny Han': 429, 'Larry Li': 83, 'Laura Dang': 197, 'Laura Wong': 19804, 'Leah Xu': 18, 'LeAnn Chan': 20, 'Léa Richard': 39, 'Lee Nguyen': 1, 'Leighton Shum': 90, 'Leo Liu': 13, 'Leon Ang': 128, 'Leon Lam': 89, 'Leon Lin': 188, 'Leo Tao': 17, 'Leroy Zhao': 29, 'Lester Lim': 9, 'Gabbynot Mendoza': 1, 'Lily Chow': 1, 'Lily Liu': 4, 'Lily Yang': 69, 'Linda Lin': 77, 'Linda Mao': 8, 'Lins Hoang': 23, 'Lisa Tang': 2300, 'Lisa Yu': 133, 'Louisa Chan': 10739, 'Louise Monk': 508, 'Lucas Btrd': 2, 'Lucie Mallet': 2, 'Lucille Huang': 18, 'Lucy Liu': 2, 'Luke Ning': 12, 'Luna Yyx': 26, 'Mabel Kwok': 8, 'Mackenzie Annis': 5572, 'Mackenzie Chau': 384, 'Maher Absar': 14, 'Mahir Khan': 181, 'Maisha Sha Sharyar': 10, 'Mako Sorensen': 21, 'Malcolm A. Nichols': 2, 'Mali Zhang': 7, 'Manon Breteaudeau': 2, 'Manuel Lok': 21, 'Margaret Lin': 3, 'Maria Zhang': 155, 'Marie Gallard': 11, 'Marielle Jolene Peñamora Loro': 52, 'Marija Cvetkovik': 8, 'Marine Besnard': 13, 'Mark Kao': 2, 'Marley Liu': 21, 'Martin Boissinot': 32, 'Marylou Gouin': 201, 'Mathilde Galichet': 13, 'Mathis Coutant': 1, 'Mathys Imari': 19, 'Matthew Barclay': 61, 'Matthew Ho': 28, 'Matthew Reynolds': 1, 'Max Chang': 19, 'Max Rand': 65, 'Melody Li': 6073, 'Melvin Wang': 12517, 'Michael McLean': 12, 'Michelle Liu': 31, 'Michelle Mei': 166, 'Mitchell Hoyt': 14, 'Muhaimin Choudhury': 5, 'Muhammad Ali': 13, 'Muhammad Subhan Altaf': 2, 'Murray Bai': 64, 'Namjun Kim': 10, 'Neien Wei': 20, 'Newton Paul': 19, 'Nick Yuhe Wang': 3, 'Nico Duke': 851, 'Niel Mistry': 49, 'Nikhil Melgiri': 2, 'Olivia Tom': 1114, 'Olivia Yung': 79, 'Parth Shah': 37, 'Patrick Liu': 121, 'Pat Young': 16, 'Peilin Wang': 9, 'Phillip Wu': 4, 'Phoebe Zhou': 415, 'Preet Sangha': 2, 'Prithvi Verghese': 5, 'Purva Amin': 2, 'Rachel Yang': 8, 'Rachel Yuan': 5, 'Rafeed Choudhury': 30874, 'Raymond DiCecco': 7, 'Regina GU': 22, 'Remeny Elsa': 2067, 'Remya Philips': 578, 'Richard Sun': 30, 'Ricky Yuen': 17, 'Rolina Wu': 9, 'Ronathan Ip': 7856, 'Ron Li': 22, 'Rosalee Hui': 30, 'Roy Chen': 16, 'Rui Li': 362, 'Rupert Wu': 63, 'Rushil Nagarsheth': 3, 'Rushnan Anusha': 115, 'Ryu Lien': 74, 'Saad Chowdhury': 264, 'Sajid Ajmal': 20, 'Saksham Aggarwal': 6, 'Sakura Shane Bruno': 53, 'Sammi Wong': 396, 'Sam Noguchi': 7, 'Samuel Cho': 1, 'Saraf Azad': 97, 'Sarah Bahreinian': 11, 'Saumya Gupta': 654, 'Seb Dg': 5, 'Serena Ong': 11, 'Shamanth Hampali': 4, 'Shangbing Jiang': 215, 'Shao Curtis Li': 13, 'Shashwat Deolal': 33, 'Shiblul Hasan': 45, 'Sifad Chowdhury': 1, 'Simon Tison': 206, 'Sivasan Sivagunalan': 2, 'Siyi Yan': 8570, 'Skylar Liang': 8, 'Smith John': 10, 'Sophie Jiang': 13, 'Stephanie Sarker': 6, 'Stephen Li': 91, 'Steven Ha': 4194, 'Steven Cheung': 32, 'Steven Feng': 510, 'Swapnil Patel': 326, 'Tam Tran': 1, 'Tashfia Hussain': 1, 'Taylor PL': 31, 'Teddy Frank': 45, 'Tiffany Sum': 2, 'Tiger Zhao': 3, 'Tina Wu': 2335, 'Tina Zhao': 3, 'Tingyun Zuo': 1322, 'Tommy Tang': 45, 'Tou Noomor': 6, 'Tracy Ngan': 20, 'Tristan Le': 6, 'Tyler Jacob': 3, 'Tyler Zhang': 88, 'Vanessa Kam': 396, 'Vevina Trinh': 104, 'Vicky Hou': 25, 'Victor Pham-Ho': 3, 'Vincent Lai': 914, 'Vincent Tan': 15, 'Vivek Philips': 74, 'Vivek Agarwal': 6, 'Vivian Chau': 67, 'Walter Raftus': 38, 'Waterloo Engineering Society': 2, 'Wendy Deng': 58, 'William Tang': 8, 'Will Mui': 14, 'Xiluo Emily Zhang': 104, 'Ya Lim': 10, 'Yanyan Law': 6, 'Yeva Yu': 21, 'Yilena Xu': 13, 'Yu Carl': 962, 'Zackary Tsang': 1769, 'Zak Hu': 11, 'Zhaoyang Yu': 10, 'Zheng He': 1112, 'Zhiyong Wang': 3, 'ZiCheng Huang': 45, 'Zoë Sherar': 6}
+    count_per_person_dm = {}
     count_per_person_dm_list = list(count_per_person_dm.items())
     for x in count_per_person_dm_list:
         x = list(x)
