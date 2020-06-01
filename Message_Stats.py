@@ -143,6 +143,7 @@ def create_stats(data_list):
                 count_per_person = total_stats[person][0]
                 word_count = total_stats[person][1]
                 char_count = total_stats[person][2]
+                emoji_count = total_stats[person][3]
                 #count unique words
                 for word in split_msg:
                     add_count_to_dict(word.lower(), unique_words)
@@ -560,7 +561,7 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
     write_search.close()
 
 def main():
-    rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\JessicaZhang_Zs11Uy-bpw'
+    rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\'
     #if you don't want to search for a msg, leave it as ""
     msg_to_search_for = ""
     #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
