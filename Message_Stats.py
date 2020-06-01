@@ -158,11 +158,12 @@ def create_stats(data_list):
                 count_per_person += 1
                 word_count += length_of_msg
                 char_count += len(msg)
+                emoji_count += len(emoji_data)
                 word_stats[person] = unique_words
                 emoji_stats[person] = unique_emojis
                 length_of_word_stats[person] = word_length_dict
                 date_stats[person] = date_dict
-                total_stats[person] = [count_per_person, word_count, char_count]
+                total_stats[person] = [count_per_person, word_count, char_count, emoji_count]
             else:
                 split_msg = msg.split()
                 length_of_msg = len(split_msg)
@@ -184,11 +185,12 @@ def create_stats(data_list):
                 count_per_person = 1
                 word_count = length_of_msg
                 char_count = len(msg) if 'messages/inbox/' not in msg else 1
+                emoji_count = len(emoji_data)
                 word_stats[person] = unique_words
                 emoji_stats[person] = unique_emojis
                 length_of_word_stats[person] = word_length_dict
                 date_stats[person] = date_dict
-                total_stats[person] = [count_per_person, word_count, char_count]
+                total_stats[person] = [count_per_person, word_count, char_count, emoji_count]
         sort_stats(word_stats, 1, 20, True)
         sort_stats(emoji_stats, 1, 10, True)
         sort_stats(length_of_word_stats, 0, 99999999999, False)
@@ -198,8 +200,9 @@ def create_stats(data_list):
         yearly_stats = sort_time_stats(yearly_stats)
         num_consecutive_days, start_date, end_date = consecutive_days_msged(daily_stats)
         consecutive_days = [num_consecutive_days, start_date, end_date]
+        max_one_day_msg_count = max_one_day_msg(daily_stats)
         general_stats = [msged_first, total_msg_count, title]
-        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo])
+        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count])
     return stats
 
 def sort_stats(stats, element_to_sort, num_elements_to_sort, reverse_sort_order):
@@ -214,6 +217,10 @@ def sort_time_stats(stats):
     list = stats.items()
     list = sorted(list, key=lambda x:x[0])
     return list
+
+def max_one_day_msg(daily_stats):
+    daily_stats = sorted(daily_stats, key=lambda x:x[1], reverse=True)
+    return daily_stats[0]
 
 def consecutive_days_msged(daily_stats):
     start_date = daily_stats[0][0]
@@ -306,7 +313,6 @@ def combined_stats_list(stats_list):
                 person_count[person] += 1
             else:
                 person_count[person] = 1
-        #stats_list[i] = sorted(stats_list[i], key=lambda x:x[0][1], reverse=True)
     person_count_list = list(person_count.items())
     person_count_list = sorted(person_count_list, key=lambda x:x[1], reverse=True)
     user_of_msgs = person_count_list[0][0]
@@ -453,26 +459,29 @@ def write_stats(path_list, stats_list):
         monthly_stats = stats_list[i][7]
         yearly_stats = stats_list[i][8]
         consecutive_days = stats_list[i][9]
+        people_who_msged_in_convo = stats_list[i][10]
+        max_one_day_msg_count = stats_list[i][11]
         stats = codecs.open(path_list[i] + "stats.txt", "w", "utf-8")
         stats.write("Chat with: " + title + "\n")
         stats.write("First ever message was sent by: " + first_msg + "\n")
         stats.write("Total messages sent: " + str(total_msg_count) + "\n")
         for name in total_stats:
             stats.write(name + ":\n")
-            stats.write("Number of messages sent: " + str(total_stats[name][0]) + " accounting for " + str(total_stats[name][0]/total_msg_count*100) + " percent of all messages\n")
+            stats.write("Number of messages sent: " + str(total_stats[name][0]) + " accounting for " + "{0:.2f}".format(total_stats[name][0]/total_msg_count*100) + " percent of all messages\n")
             stats.write("Number of words sent: " + str(total_stats[name][1]) + "\n")
             stats.write("Number of characters sent: " + str(total_stats[name][2]) + "\n")
-            stats.write("Average message length: " + str(total_stats[name][1]/total_stats[name][0]) + " words\n")
+            stats.write("Number of emojis sent: " + str(total_stats[name][3]) + "\n")
+            stats.write("Average message length: " + "{0:.2f}".format(total_stats[name][1]/total_stats[name][0]) + " words\n")
         stats.write("\nTop Words per person:\n")
         for name in word_stats:
-            stats.write(":\n" + name + ":\n")
+            stats.write("\n" + name + ":\n")
             for words in word_stats[name]:
                 stats.write("Word: " + words[0] + " appeared " + str(words[1]))
                 if words[1] == 1:
                     stats.write(" time")
                 else:
                     stats.write(" times")
-                stats.write(", accounting for " + str(words[1]/total_stats[name][1]*100) + " percent of all words\n")
+                stats.write(", accounting for " + "{0:.2f}".format(words[1]/total_stats[name][1]*100) + " percent of all words\n")
         stats.write("\nTop Emojis per person:\n")
         for name in emoji_stats:
             stats.write(name + ":\n")
@@ -482,7 +491,7 @@ def write_stats(path_list, stats_list):
                     stats.write(" time")
                 else:
                     stats.write(" times")
-                stats.write(", accounting for " + str(emojis[1]/total_stats[name][1]*100) + " percent of all emojis\n")
+                stats.write(", accounting for " + "{0:.2f}".format(emojis[1]/total_stats[name][3]*100) + " percent of all emojis\n")
         stats.write("\nMessage Lengths:\n")
         for name in length_of_word_stats:
             stats.write(name + ":\n")
@@ -502,14 +511,7 @@ def write_stats(path_list, stats_list):
                 # else:
                     # stats.write(" messages ")
                 # stats.write("were sent on " + str(dates[0]) + "\n")
-        # stats.write("\nCombined Daily Messages Sent:\n")
-        # for dates in daily_stats:
-            # stats.write(str(dates[1]))
-            # if dates[1] == 1:
-                # stats.write(" message ")
-            # else:
-                # stats.write(" messages ")
-            # stats.write("were sent on " + str(dates[0]) + "\n")
+        stats.write("\nMax Number Messages Sent in one day: " + str(max_one_day_msg_count[1]) + " on " + str(max_one_day_msg_count[0]) + "\n")
         stats.write("\nCombined Monthly Messages Sent:\n")
         for dates in monthly_stats:
             stats.write(str(dates[1]))
