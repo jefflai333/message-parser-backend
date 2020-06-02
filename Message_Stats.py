@@ -192,7 +192,7 @@ def create_stats(data_list):
                 length_of_word_stats[person] = word_length_dict
                 date_stats[person] = date_dict
                 total_stats[person] = [count_per_person, word_count, char_count, emoji_count]
-        sort_stats(word_stats, 1, 20, True)
+        sort_stats(word_stats, 1, 10, True)
         sort_stats(emoji_stats, 1, 10, True)
         sort_stats(length_of_word_stats, 0, 99999999999, False)
         sort_stats(date_stats, 0, 99999999999, False)
@@ -320,6 +320,8 @@ def combine_parsed_list(parsed_list):
 
 def combined_stats_list(stats_list):
     person_count = dict()
+    #figure out who is the person that used the script
+    #checks for whoever messaged the most, since that is the person who must have used the script
     for i in range(0, len(stats_list)):
         people_who_msged_in_convo = stats_list[i][10]
         for person in people_who_msged_in_convo:
@@ -338,6 +340,10 @@ def combined_stats_list(stats_list):
     received_per_group = []
     total_msg_per_chat = []
     total_msg_per_group_chat  = []
+    top_one_day_msg_count = []
+    top_one_day_msg_group_count = []
+    max_consecutive_days = []
+    max_consecutive_group_days = []
     for i in range(0, len(stats_list)):
         first_msg = stats_list[i][0][0]
         total_msg_count = stats_list[i][0][1]
@@ -352,21 +358,29 @@ def combined_stats_list(stats_list):
         yearly_stats = stats_list[i][8]
         consecutive_days = stats_list[i][9]
         people_who_msged_in_convo = stats_list[i][10]
+        max_one_day_msg_count = stats_list[i][11]
+        person_sent_most_msgs = stats_list[i][12]
         #check to see if it is a direct message
         if user_of_msgs in people_who_msged_in_convo and len(people_who_msged_in_convo) == 2 or len(people_who_msged_in_convo) == 1:
+            #if there is actually a convo, then append it to the total_msg_per_chat
             if first_msg != "Nobody":
                 total_msg_per_chat.append([title, total_msg_count])
                 if user_of_msgs in total_stats:
                     sent_per_person.append([title, total_stats[user_of_msgs][0]])
                     received_per_person.append([title, total_msg_count-total_stats[user_of_msgs][0]])
             count_first_msg(first_msg, user_of_msgs, first_msg_count)
+            top_one_day_msg_count.append([title, max_one_day_msg_count[1], max_one_day_msg_count[0]])
+            max_consecutive_days.append([title, consecutive_days[0], consecutive_days[1], consecutive_days[2]])
         else:
+            #if there is actually a convo, then append it to the total_msg_per_group_chat
             if first_msg != "Nobody":
                 total_msg_per_group_chat.append([title, total_msg_count])
                 if user_of_msgs in total_stats:
                     sent_per_group.append([title, total_stats[user_of_msgs][0]])
                     received_per_group.append([title, total_msg_count-total_stats[user_of_msgs][0]])
             count_first_msg(first_msg, user_of_msgs, first_msg_count_group)
+            top_one_day_msg_group_count.append([title, max_one_day_msg_count[1], max_one_day_msg_count[0]])
+            max_consecutive_group_days.append([title, consecutive_days[0], consecutive_days[1], consecutive_days[2]])
     user_of_msgs_sent_total = sum(x[1] for x in sent_per_person)
     user_of_msgs_receive_total = sum(x[1] for x in received_per_person)
     user_of_msgs_group_sent_total = sum(x[1] for x in sent_per_group)
@@ -379,7 +393,11 @@ def combined_stats_list(stats_list):
     user_of_msgs_count_group_arr = [user_of_msgs_group_sent_total, user_of_msgs_group_receive_total]
     total_msg_per_chat = sort_combined_stats(total_msg_per_chat, 10)
     total_msg_per_group_chat = sort_combined_stats(total_msg_per_group_chat, 10)
-    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group]
+    top_one_day_msg_count = sort_combined_stats(top_one_day_msg_count, 10)
+    top_one_day_msg_group_count = sort_combined_stats(top_one_day_msg_group_count, 10)
+    max_consecutive_days = sort_combined_stats(max_consecutive_days, 10)
+    max_consecutive_group_days = sort_combined_stats(max_consecutive_group_days, 10)
+    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days]
 
 def sort_combined_stats(list, top_num):
     list = sorted(list, key=lambda x:x[1], reverse=True)
@@ -399,6 +417,11 @@ def write_total_stats(rootdir, total_stats_list):
     received_per_person = total_stats_list[7]
     sent_per_group = total_stats_list[8]
     received_per_group = total_stats_list[9]
+    #change order of list here!!!
+    top_one_day_msg_count = total_stats_list[10]
+    top_one_day_msg_group_count = total_stats_list[11]
+    max_consecutive_days = total_stats_list[12]
+    max_consecutive_group_days = total_stats_list[13]
     stats.write("Out of the " + str(sum(first_msg_count)) + " direct messages, you started " + str(first_msg_count[0]) + " of them, ")
     stats.write("or " + str(first_msg_count[0]/sum(first_msg_count)*100) + " percent\n")
     stats.write("They started " + str(first_msg_count[1]) + " of them, ")
@@ -440,6 +463,18 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("\nThe group chats you received the most messages from:\n")
     for stat in received_per_group:
         stats.write(stat[0] + ": " + str(stat[1]) + " total messages\n")
+    stats.write("\nThe people you had the most messages with in one day:\n")
+    for stat in top_one_day_msg_count:
+        stats.write(stat[0] + ": " + str(stat[1]) + " on " + str(stat[2]) + "\n")
+    stats.write("\nThe groups you had the most messages with in one day:\n")
+    for stat in top_one_day_msg_group_count:
+        stats.write(stat[0] + ": " + str(stat[1]) + " on " + str(stat[2]) + "\n")
+    stats.write("\nThe people you had the longest consecutive days messaged with:\n")
+    for stat in max_consecutive_days:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive days during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
+    stats.write("\nThe groups you had the longest consecutive days messaged with:\n")
+    for stat in max_consecutive_group_days:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive days during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
 
 def count_first_msg(first_msg, user_of_msgs, first_msg_count):
     if first_msg == user_of_msgs:
@@ -481,7 +516,7 @@ def write_stats(path_list, stats_list):
         stats.write("First ever message was sent by: " + first_msg + "\n")
         stats.write("Total messages sent: " + str(total_msg_count) + "\n")
         for name in total_stats:
-            stats.write(name + ":\n")
+            stats.write("\n" + name + ":\n")
             stats.write("Number of messages sent: " + str(total_stats[name][0]) + " accounting for " + "{0:.2f}".format(total_stats[name][0]/total_msg_count*100) + " percent of all messages\n")
             stats.write("Number of words sent: " + str(total_stats[name][1]) + "\n")
             stats.write("Number of characters sent: " + str(total_stats[name][2]) + "\n")
@@ -499,7 +534,7 @@ def write_stats(path_list, stats_list):
                 stats.write(", accounting for " + "{0:.2f}".format(words[1]/total_stats[name][1]*100) + " percent of all words\n")
         stats.write("\nTop Emojis per person:\n")
         for name in emoji_stats:
-            stats.write(name + ":\n")
+            stats.write("\n" + name + ":\n")
             for emojis in emoji_stats[name]:
                 stats.write("Emoji: " + emojis[0] + " appeared " + str(emojis[1]))
                 if emojis[1] == 1:
@@ -509,7 +544,7 @@ def write_stats(path_list, stats_list):
                 stats.write(", accounting for " + "{0:.2f}".format(emojis[1]/total_stats[name][3]*100) + " percent of all emojis\n")
         stats.write("\nMessage Lengths:\n")
         for name in length_of_word_stats:
-            stats.write(name + ":\n")
+            stats.write("\n" + name + ":\n")
             for lengths in length_of_word_stats[name]:
                 stats.write("Message word length of " + str(lengths[0]) + " appeared " + str(lengths[1]))
                 if lengths[1] == 1:
@@ -537,7 +572,7 @@ def write_stats(path_list, stats_list):
             else:
                 stats.write(" messages were ")
             stats.write("sent in " + str(dates[0].year) + "\n")
-        stats.write("Max consecutive days msged is " + str(consecutive_days[0]) + "\n")
+        stats.write("\nMax consecutive days msged is " + str(consecutive_days[0]) + "\n")
         stats.write("Achieved during the time frame " + str(consecutive_days[1]) + " to " + str(consecutive_days[2]) + "\n")
         stats.close()
 
