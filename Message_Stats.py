@@ -727,27 +727,7 @@ def main():
     if len(stats_list) > 1:
         total_stats_list = combined_stats_list(stats_list)
         write_total_stats(rootdir, total_stats_list)
-    
-def plot_graph():
-    count_per_person_dm = {}
-    count_per_person_dm_list = list(count_per_person_dm.items())
-    for x in count_per_person_dm_list:
-        x = list(x)
-        x[1] = int(x[1])
-    count_per_person_dm_list = sorted(count_per_person_dm_list, key=lambda msg: msg[1], reverse=True)
-    names = list()
-    num_msgs = []
-    for x in range(1, 10):
-        names.append(count_per_person_dm_list[x][0])
-        num_msgs.append(count_per_person_dm_list[x][1])
-    y_pos = np.arange(len(names))
-    plt.bar(y_pos, num_msgs, align='center', alpha=0.5)
-    plt.xticks(y_pos, names)
-    plt.ylabel('Number of Msgs')
-    plt.title('Most Frequent People Msged')
-
-    plt.show()
 
 if __name__ == "__main__":
     main()
-    #plot_graph()
+    
