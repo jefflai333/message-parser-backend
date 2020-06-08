@@ -121,6 +121,7 @@ def create_stats(data_list):
         yearly_stats = dict()
         people_who_msged_in_convo = set()
         total_msg_count = 0
+        total_word_count = 0
         for message in data:
             person = message[0]
             people_who_msged_in_convo.add(person)
@@ -134,6 +135,7 @@ def create_stats(data_list):
             add_count_to_dict(date, yearly_stats)
             date = date_time.date()
             total_msg_count += 1
+            total_word_count += len(msg.split())
             if person in total_stats:
                 split_msg = msg.split()
                 length_of_msg = len(split_msg)
@@ -208,7 +210,7 @@ def create_stats(data_list):
         consecutive_days = [num_consecutive_days, start_date, end_date]
         max_one_day_msg_count = max_one_day_msg(daily_stats)
         person_sent_most_msgs = sent_most_msgs_per_day(date_stats)
-        general_stats = [msged_first, total_msg_count, title]
+        general_stats = [msged_first, total_msg_count, title, total_word_count]
         stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count, person_sent_most_msgs, max_one_day_msg_count_per_person, max_length_of_word_stats])
     return stats
 
@@ -438,6 +440,12 @@ def combined_stats_list(stats_list):
     sent_per_group = []
     received_per_person = []
     received_per_group = []
+    words_sent_per_person = []
+    words_sent_per_group = []
+    words_received_per_person = []
+    words_received_per_group = []
+    total_words_per_chat = []
+    total_words_per_group_chat = []
     total_msg_per_chat = []
     total_msg_per_group_chat  = []
     max_length_of_word_sent = []
@@ -466,6 +474,7 @@ def combined_stats_list(stats_list):
         first_msg = stats_list[i][0][0]
         total_msg_count = stats_list[i][0][1]
         title = stats_list[i][0][2]
+        total_word_count = stats_list[i][0][3]
         total_stats = stats_list[i][1]
         word_stats = stats_list[i][2]
         emoji_stats = stats_list[i][3]
@@ -485,9 +494,12 @@ def combined_stats_list(stats_list):
             #if there is actually a convo, then append it to the total_msg_per_chat
             if first_msg != "Nobody":
                 total_msg_per_chat.append([title, total_msg_count])
+                total_words_per_chat.append([title, total_word_count])
                 if user_of_msgs in total_stats:
                     sent_per_person.append([title, total_stats[user_of_msgs][0]])
                     received_per_person.append([title, total_msg_count-total_stats[user_of_msgs][0]])
+                    words_sent_per_person.append([title, total_stats[user_of_msgs][1]])
+                    words_received_per_person.append([title, total_word_count-total_stats[user_of_msgs][1]])
                     max_length_of_word_sent_and_received(max_length_of_word_sent, max_length_of_word_received, max_length_of_word_stats, user_of_msgs, title)
                     #this is total msgs sent and received in one day to/by a specific person
                     top_one_day_msg_count_sent_and_received(top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, max_one_day_msg_count_per_person, user_of_msgs, title)
@@ -502,9 +514,12 @@ def combined_stats_list(stats_list):
             #if there is actually a convo, then append it to the total_msg_per_group_chat
             if first_msg != "Nobody":
                 total_msg_per_group_chat.append([title, total_msg_count])
+                total_words_per_group_chat.append([title, total_word_count])
                 if user_of_msgs in total_stats:
                     sent_per_group.append([title, total_stats[user_of_msgs][0]])
                     received_per_group.append([title, total_msg_count-total_stats[user_of_msgs][0]])
+                    words_sent_per_group.append([title, total_stats[user_of_msgs][1]])
+                    words_received_per_group.append([title, total_word_count-total_stats[user_of_msgs][1]])
                     max_length_of_word_sent_and_received(max_length_of_word_group_sent, max_length_of_word_group_received, max_length_of_word_stats, user_of_msgs, title)
                     #this is total msgs sent and received in one day to/by a specific person
                     top_one_day_msg_count_sent_and_received(top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, max_one_day_msg_count_per_person, user_of_msgs, title)
@@ -525,10 +540,22 @@ def combined_stats_list(stats_list):
     sent_per_group = sort_combined_stats(sent_per_group, 10)
     received_per_person = sort_combined_stats(received_per_person, 10)
     received_per_group = sort_combined_stats(received_per_group, 10)
+    user_of_msgs_words_sent_total = sum(x[1] for x in words_sent_per_person)
+    user_of_msgs_words_receive_total = sum(x[1] for x in words_received_per_person)
+    user_of_msgs_words_group_sent_total = sum(x[1] for x in words_sent_per_group)
+    user_of_msgs_words_group_receive_total = sum(x[1] for x in words_received_per_group)
+    words_sent_per_person = sort_combined_stats(words_sent_per_person, 10)
+    words_sent_per_group = sort_combined_stats(words_sent_per_group, 10)
+    words_received_per_person = sort_combined_stats(words_received_per_person, 10)
+    words_received_per_group = sort_combined_stats(words_received_per_group, 10)
     user_of_msgs_count_arr = [user_of_msgs_sent_total, user_of_msgs_receive_total]
     user_of_msgs_count_group_arr = [user_of_msgs_group_sent_total, user_of_msgs_group_receive_total]
+    user_of_msgs_words_count_arr = [user_of_msgs_words_sent_total, user_of_msgs_words_receive_total]
+    user_of_msgs_words_count_group_arr = [user_of_msgs_words_group_sent_total, user_of_msgs_words_group_receive_total]
     total_msg_per_chat = sort_combined_stats(total_msg_per_chat, 10)
     total_msg_per_group_chat = sort_combined_stats(total_msg_per_group_chat, 10)
+    total_words_per_chat = sort_combined_stats(total_words_per_chat, 10)
+    total_words_per_group_chat = sort_combined_stats(total_words_per_group_chat, 10)
     max_length_of_word_sent = sort_combined_stats(max_length_of_word_sent, 10)
     max_length_of_word_received = sort_combined_stats(max_length_of_word_received, 10)
     max_length_of_word_group_sent = sort_combined_stats(max_length_of_word_group_sent, 10)
@@ -547,7 +574,7 @@ def combined_stats_list(stats_list):
     yearly_stats_list = sorted(yearly_stats_list, key=lambda x:x[0])
     yearly_group_stats_list = total_group_yearly_stats.items()
     yearly_group_stats_list = sorted(yearly_group_stats_list, key=lambda x:x[0])
-    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list]
+    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list, user_of_msgs_words_count_arr, user_of_msgs_words_count_group_arr, total_words_per_chat, total_words_per_group_chat, words_sent_per_person, words_received_per_person, words_sent_per_group, words_received_per_group]
 
 def sort_combined_stats(list, top_num):
     list = sorted(list, key=lambda x:x[1], reverse=True)
@@ -587,6 +614,15 @@ def write_total_stats(rootdir, total_stats_list):
     monthly_group_stats_list = total_stats_list[27]
     yearly_stats_list = total_stats_list[28]
     yearly_group_stats_list = total_stats_list[29]
+    user_of_msgs_words_count_arr = total_stats_list[30]
+    user_of_msgs_words_count_group_arr = total_stats_list[31]
+    total_words_per_chat = total_stats_list[32]
+    total_words_per_group_chat = total_stats_list[33]
+    words_sent_per_person = total_stats_list[34]
+    words_received_per_person = total_stats_list[35]
+    words_sent_per_group = total_stats_list[36]
+    words_received_per_group = total_stats_list[37]
+    
     stats.write("Out of the " + str(sum(first_msg_count)) + " direct messages, you started " + str(first_msg_count[0]) + " of them, ")
     stats.write("or " + "{0:.2f}".format(first_msg_count[0]/sum(first_msg_count)*100) + " percent\n")
     stats.write("They started " + str(first_msg_count[1]) + " of them, ")
@@ -610,6 +646,12 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("Lifetime direct messages received: " + str(user_of_msgs_count_arr[1]) + "\n")
     stats.write("Lifetime group messages sent: " + str(user_of_msgs_count_group_arr[0]) + "\n")
     stats.write("Lifetime group messages received: " + str(user_of_msgs_count_group_arr[1]) + "\n\n")
+    stats.write("Lifetime words sent: " + str(user_of_msgs_words_count_arr[0] + user_of_msgs_words_count_group_arr[0]) + "\n")
+    stats.write("Lifetime words received: " + str(user_of_msgs_words_count_arr[1] + user_of_msgs_words_count_group_arr[1]) + "\n")
+    stats.write("Lifetime direct message words sent: " + str(user_of_msgs_words_count_arr[0]) + "\n")
+    stats.write("Lifetime direct message words received: " + str(user_of_msgs_words_count_arr[1]) + "\n")
+    stats.write("Lifetime group message words sent: " + str(user_of_msgs_words_count_group_arr[0]) + "\n")
+    stats.write("Lifetime group message words received: " + str(user_of_msgs_words_count_group_arr[1]) + "\n\n")
     #Stats for direct messages
     stats.write("The people you have the most messages with:\n")
     for stat in total_msg_per_chat:
@@ -620,6 +662,12 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("\nThe people you received the most messages from:\n")
     for stat in received_per_person:
         stats.write(stat[0] + ": " + str(stat[1]) + " total messages\n")
+    stats.write("\nThe people you sent the most words to:\n")
+    for stat in words_sent_per_person:
+        stats.write(stat[0] + ": " + str(stat[1]) + " total words\n")
+    stats.write("\nThe people you received the most words from:\n")
+    for stat in words_received_per_person:
+        stats.write(stat[0] + ": " + str(stat[1]) + " total words\n")
     stats.write("\nThe people you sent the most messages to in one day:\n")
     for stat in top_one_day_msg_count_sent_per_person:
         stats.write(stat[0] + ": " + str(stat[1]) + " on " + str(stat[2]) + "\n")
@@ -660,6 +708,12 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("\nThe group chats you received the most messages from:\n")
     for stat in received_per_group:
         stats.write(stat[0] + ": " + str(stat[1]) + " total messages\n")
+    stats.write("\nThe group chats you sent the most words to:\n")
+    for stat in words_sent_per_group:
+        stats.write(stat[0] + ": " + str(stat[1]) + " total words\n")
+    stats.write("\nThe group chats you received the most words from:\n")
+    for stat in words_received_per_group:
+        stats.write(stat[0] + ": " + str(stat[1]) + " total words\n")
     stats.write("\nThe group chats you sent the most messages to in one day:\n")
     for stat in top_one_day_msg_group_count_sent_per_person:
         stats.write(stat[0] + ": " + str(stat[1]) + " on " + str(stat[2]) + "\n")
@@ -818,7 +872,7 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
 def main():
     #set rootdir to end in \\inbox\\ to get total stats
     #if you only care about one person/group, then add the folder name to the end of rootdir
-    rootdir = 'D:\\Facebook Data\\2020 April\\messages\\inbox\\'#JessicaZhang_Zs11Uy-bpw'
+    rootdir = 'D:\\Facebook Data\\2020 June\\messages\\inbox\\'
     #if you don't want to search for a msg, leave it as ""
     msg_to_search_for = ""
     #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
