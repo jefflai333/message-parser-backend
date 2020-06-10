@@ -627,7 +627,7 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("or " + "{0:.2f}".format(first_msg_count[0]/sum(first_msg_count)*100) + " percent\n")
     stats.write("They started " + str(first_msg_count[1]) + " of them, ")
     stats.write("or " + "{0:.2f}".format(first_msg_count[1]/sum(first_msg_count)*100) + " percent\n")
-    stats.write("You haven't messaged " + str(first_msg_count[2]) + " of them, ")
+    stats.write("You haven't messaged in" + str(first_msg_count[2]) + " of them, ")
     stats.write("or " + "{0:.2f}".format(first_msg_count[2]/sum(first_msg_count)*100) + " percent\n")
     stats.write("Out of the " + str(sum(first_msg_count_group)) + " group messages, you started " + str(first_msg_count_group[0]) + " of them, ")
     stats.write("or " + "{0:.2f}".format(first_msg_count_group[0]/sum(first_msg_count_group)*100) + " percent\n")
@@ -872,7 +872,7 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
 def main():
     #set rootdir to end in \\inbox\\ to get total stats
     #if you only care about one person/group, then add the folder name to the end of rootdir
-    rootdir = 'D:\\Facebook Data\\2020 June\\messages\\inbox\\'
+    rootdir = 'D:\\Facebook Data\\2020 June No Photos\\messages\\inbox\\'
     #if you don't want to search for a msg, leave it as ""
     msg_to_search_for = ""
     #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
