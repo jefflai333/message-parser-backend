@@ -122,6 +122,11 @@ def create_stats(data_list):
         people_who_msged_in_convo = set()
         total_msg_count = 0
         total_word_count = 0
+        consecutive_msgs_stats = dict()
+        consecutive_msgs = 1
+        start_consecutive_msg = datetime.strptime(data[0][2], "%b %d, %Y, %I:%M %p")
+        end_consecutive_msg = datetime.strptime(data[0][2], "%b %d, %Y, %I:%M %p")
+        prev_person = data[0][0]
         for message in data:
             person = message[0]
             people_who_msged_in_convo.add(person)
@@ -136,6 +141,25 @@ def create_stats(data_list):
             date = date_time.date()
             total_msg_count += 1
             total_word_count += len(msg.split())
+            if person == prev_person and data[0] != message:
+                consecutive_msgs += 1
+                end_consecutive_msg = date_time
+            if person != prev_person or data[-1] == message:
+                if prev_person not in consecutive_msgs_stats:
+                    consecutive_msgs_stats[prev_person] = [[consecutive_msgs, end_consecutive_msg, start_consecutive_msg]]
+                elif len(consecutive_msgs_stats[prev_person]) <= 10:
+                    consecutive_msgs_stats[prev_person].append([consecutive_msgs, end_consecutive_msg, start_consecutive_msg])
+                else:
+                    for i in range(0, len(consecutive_msgs_stats[prev_person])):
+                        if consecutive_msgs > consecutive_msgs_stats[prev_person][i][0]:
+                            consecutive_msgs_stats[prev_person][i] = [consecutive_msgs, end_consecutive_msg, start_consecutive_msg]
+                            break
+                consecutive_msgs = 1
+                start_consecutive_msg = date_time
+                end_consecutive_msg = date_time
+                if data[-1] == message and person not in consecutive_msgs_stats:
+                    consecutive_msgs_stats[person] = [[consecutive_msgs, end_consecutive_msg, start_consecutive_msg]]
+            prev_person = person
             if person in total_stats:
                 split_msg = msg.split()
                 length_of_msg = len(split_msg)
@@ -211,7 +235,9 @@ def create_stats(data_list):
         max_one_day_msg_count = max_one_day_msg(daily_stats)
         person_sent_most_msgs = sent_most_msgs_per_day(date_stats)
         general_stats = [msged_first, total_msg_count, title, total_word_count]
-        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count, person_sent_most_msgs, max_one_day_msg_count_per_person, max_length_of_word_stats])
+        for person in consecutive_msgs_stats:
+            consecutive_msgs_stats[person] = sorted(consecutive_msgs_stats[person], key=lambda x:x[0], reverse=True)
+        stats.append([general_stats, total_stats, word_stats, emoji_stats, length_of_word_stats, date_stats, daily_stats, monthly_stats, yearly_stats, consecutive_days, people_who_msged_in_convo, max_one_day_msg_count, person_sent_most_msgs, max_one_day_msg_count_per_person, max_length_of_word_stats, consecutive_msgs_stats])
     return stats
 
 def sort_stats(stats, element_to_sort, num_elements_to_sort, reverse_sort_order):
@@ -332,7 +358,19 @@ def combine_parsed_list(parsed_list):
         arr.append(title)
         data_list.append(arr)
     return data_list
-        
+
+def max_consecutive_msgs_sent_and_received(max_consecutive_msgs_sent, max_consecutive_msgs_received, consecutive_msgs_stats, user_of_msgs, title):
+    max_consecutive_msgs_sent.append([title, consecutive_msgs_stats[user_of_msgs][0][0], consecutive_msgs_stats[user_of_msgs][0][1], consecutive_msgs_stats[user_of_msgs][0][2]])
+    del consecutive_msgs_stats[user_of_msgs]
+    list = consecutive_msgs_stats.items()
+    data_list = []
+    for key, value in list:
+        arr = [value[0][0], value[0][1], value[0][2]]
+        data_list.append(arr)
+    data_list = sorted(data_list, key=lambda x:x[0], reverse=True)
+    if len(data_list) > 0:
+        max_consecutive_msgs_received.append([title, data_list[0][0], data_list[0][1], data_list[0][2]])
+
 def max_length_of_word_sent_and_received(max_length_of_word_sent, max_length_of_word_received, max_length_of_word_stats, user_of_msgs, title):
     max_length_of_word_sent.append([title, max_length_of_word_stats[user_of_msgs][0], max_length_of_word_stats[user_of_msgs][1]])
     del max_length_of_word_stats[user_of_msgs]
@@ -456,6 +494,10 @@ def combined_stats_list(stats_list):
     top_one_day_msg_group_count = []
     max_consecutive_days = []
     max_consecutive_group_days = []
+    max_consecutive_msgs_sent = []
+    max_consecutive_group_msgs_sent = []
+    max_consecutive_msgs_received = []
+    max_consecutive_group_msgs_received = []
     top_one_day_msg_count_sent = []
     top_one_day_msg_group_count_sent = []
     top_one_day_msg_count_received = []
@@ -489,6 +531,7 @@ def combined_stats_list(stats_list):
         person_sent_most_msgs = stats_list[i][12]
         max_one_day_msg_count_per_person = stats_list[i][13]
         max_length_of_word_stats = stats_list[i][14]
+        consecutive_msgs_stats = stats_list[i][15]
         #check to see if it is a direct message
         if user_of_msgs in people_who_msged_in_convo and len(people_who_msged_in_convo) == 2 or len(people_who_msged_in_convo) == 1:
             #if there is actually a convo, then append it to the total_msg_per_chat
@@ -500,6 +543,7 @@ def combined_stats_list(stats_list):
                     received_per_person.append([title, total_msg_count-total_stats[user_of_msgs][0]])
                     words_sent_per_person.append([title, total_stats[user_of_msgs][1]])
                     words_received_per_person.append([title, total_word_count-total_stats[user_of_msgs][1]])
+                    max_consecutive_msgs_sent_and_received(max_consecutive_msgs_sent, max_consecutive_msgs_received, consecutive_msgs_stats, user_of_msgs, title)
                     max_length_of_word_sent_and_received(max_length_of_word_sent, max_length_of_word_received, max_length_of_word_stats, user_of_msgs, title)
                     #this is total msgs sent and received in one day to/by a specific person
                     top_one_day_msg_count_sent_and_received(top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, max_one_day_msg_count_per_person, user_of_msgs, title)
@@ -520,6 +564,7 @@ def combined_stats_list(stats_list):
                     received_per_group.append([title, total_msg_count-total_stats[user_of_msgs][0]])
                     words_sent_per_group.append([title, total_stats[user_of_msgs][1]])
                     words_received_per_group.append([title, total_word_count-total_stats[user_of_msgs][1]])
+                    max_consecutive_msgs_sent_and_received(max_consecutive_group_msgs_sent, max_consecutive_group_msgs_received, consecutive_msgs_stats, user_of_msgs, title)
                     max_length_of_word_sent_and_received(max_length_of_word_group_sent, max_length_of_word_group_received, max_length_of_word_stats, user_of_msgs, title)
                     #this is total msgs sent and received in one day to/by a specific person
                     top_one_day_msg_count_sent_and_received(top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, max_one_day_msg_count_per_person, user_of_msgs, title)
@@ -548,6 +593,10 @@ def combined_stats_list(stats_list):
     words_sent_per_group = sort_combined_stats(words_sent_per_group, 10)
     words_received_per_person = sort_combined_stats(words_received_per_person, 10)
     words_received_per_group = sort_combined_stats(words_received_per_group, 10)
+    max_consecutive_msgs_sent = sort_combined_stats(max_consecutive_msgs_sent, 10)
+    max_consecutive_group_msgs_sent = sort_combined_stats(max_consecutive_group_msgs_sent, 10)
+    max_consecutive_msgs_received = sort_combined_stats(max_consecutive_msgs_received, 10)
+    max_consecutive_group_msgs_received = sort_combined_stats(max_consecutive_group_msgs_received, 10)
     user_of_msgs_count_arr = [user_of_msgs_sent_total, user_of_msgs_receive_total]
     user_of_msgs_count_group_arr = [user_of_msgs_group_sent_total, user_of_msgs_group_receive_total]
     user_of_msgs_words_count_arr = [user_of_msgs_words_sent_total, user_of_msgs_words_receive_total]
@@ -574,7 +623,7 @@ def combined_stats_list(stats_list):
     yearly_stats_list = sorted(yearly_stats_list, key=lambda x:x[0])
     yearly_group_stats_list = total_group_yearly_stats.items()
     yearly_group_stats_list = sorted(yearly_group_stats_list, key=lambda x:x[0])
-    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list, user_of_msgs_words_count_arr, user_of_msgs_words_count_group_arr, total_words_per_chat, total_words_per_group_chat, words_sent_per_person, words_received_per_person, words_sent_per_group, words_received_per_group]
+    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list, user_of_msgs_words_count_arr, user_of_msgs_words_count_group_arr, total_words_per_chat, total_words_per_group_chat, words_sent_per_person, words_received_per_person, words_sent_per_group, words_received_per_group, max_consecutive_msgs_sent, max_consecutive_msgs_received, max_consecutive_group_msgs_sent, max_consecutive_group_msgs_received]
 
 def sort_combined_stats(list, top_num):
     list = sorted(list, key=lambda x:x[1], reverse=True)
@@ -622,7 +671,10 @@ def write_total_stats(rootdir, total_stats_list):
     words_received_per_person = total_stats_list[35]
     words_sent_per_group = total_stats_list[36]
     words_received_per_group = total_stats_list[37]
-    
+    max_consecutive_msgs_sent = total_stats_list[38]
+    max_consecutive_msgs_received = total_stats_list[39]
+    max_consecutive_group_msgs_sent = total_stats_list[40]
+    max_consecutive_group_msgs_received = total_stats_list[41]
     stats.write("Out of the " + str(sum(first_msg_count)) + " direct messages, you started " + str(first_msg_count[0]) + " of them, ")
     stats.write("or " + "{0:.2f}".format(first_msg_count[0]/sum(first_msg_count)*100) + " percent\n")
     stats.write("They started " + str(first_msg_count[1]) + " of them, ")
@@ -686,6 +738,12 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("\nThe people you had the longest consecutive days messaged with:\n")
     for stat in max_consecutive_days:
         stats.write(stat[0] + ": " + str(stat[1]) + " consecutive days during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
+    stats.write("\nThe people you sent the most consecutive messages to:\n")
+    for stat in max_consecutive_msgs_sent:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive messages during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
+    stats.write("\nThe people you received the most consecutive messages from:\n")
+    for stat in max_consecutive_msgs_received:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive messages during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
     stats.write("\nThe people you sent the longest message to:\n")
     for stat in max_length_of_word_sent:
         stats.write(stat[0] + ": " + "message word length of " + str(stat[1]) + " on " + str(stat[2]) + "\n")
@@ -732,6 +790,12 @@ def write_total_stats(rootdir, total_stats_list):
     stats.write("\nThe group chats you had the longest consecutive days messaged with:\n")
     for stat in max_consecutive_group_days:
         stats.write(stat[0] + ": " + str(stat[1]) + " consecutive days during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
+    stats.write("\nThe group chats you sent the most consecutive messages to:\n")
+    for stat in max_consecutive_group_msgs_sent:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive messages during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
+    stats.write("\nThe group chats you received the most consecutive messages from:\n")
+    for stat in max_consecutive_group_msgs_received:
+        stats.write(stat[0] + ": " + str(stat[1]) + " consecutive messages during the period " + str(stat[2]) + " to " + str(stat[3]) + "\n")
     stats.write("\nThe group chats you sent the longest message to:\n")
     for stat in max_length_of_word_group_sent:
         stats.write(stat[0] + ": " + "message word length of " + str(stat[1]) + " on " + str(stat[2]) + "\n")
@@ -780,6 +844,7 @@ def write_stats(path_list, stats_list):
         people_who_msged_in_convo = stats_list[i][10]
         max_one_day_msg_count = stats_list[i][11]
         person_sent_most_msgs = stats_list[i][12]
+        consecutive_msgs_stats = stats_list[i][15]
         stats = codecs.open(path_list[i] + "stats.txt", "w", "utf-8")
         stats.write("Chat with: " + title + "\n")
         stats.write("First ever message was sent by: " + first_msg + "\n")
@@ -848,6 +913,17 @@ def write_stats(path_list, stats_list):
             stats.write("sent in " + str(dates[0].year) + "\n")
         stats.write("\nMax consecutive days msged is " + str(consecutive_days[0]) + "\n")
         stats.write("Achieved during the time frame " + str(consecutive_days[1]) + " to " + str(consecutive_days[2]) + "\n")
+        for person in consecutive_msgs_stats:
+            stats.write("\n" + person + ":\n")
+            for arr in consecutive_msgs_stats[person]:
+                stats.write(str(arr[0])) 
+                if arr[0] == 1:
+                    stats.write(" consecutive msg\n")
+                else:
+                    stats.write(" consecutive msgs\n")
+                stats.write("Achieved during the time frame " + str(arr[1]) + " to " + str(arr[2]) + "\n")
+            #stats.write("Max consecutive msgs is " + str(consecutive_msgs_stats[person][0]) + "\n")
+            #stats.write("Achieved during the time frame " + str(consecutive_msgs_stats[person][1]) + " to " + str(consecutive_msgs_stats[person][2]) + "\n")
         stats.close()
 
 def write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date):
