@@ -1,14 +1,11 @@
-import re, os, json, time, pathlib
-import numpy as np
-import matplotlib.pyplot as plt
-import codecs
-from functools import partial
+import re, os, json, time, pathlib, codecs, string, emoji
 from html.parser import HTMLParser
 from html.entities import name2codepoint
 from operator import itemgetter
 from natsort import natsort_key, natsorted, ns
 from datetime import datetime, date
-import emoji
+from ctypes import windll
+
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -945,10 +942,36 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
             write_search.write(name + " at " + str(time) + ": " + msg + "\n")
     write_search.close()
 
+def find_root_dir(drives):
+    creation_time = 0
+    for drive in drives:
+        for dirpath, subdirs, files in os.walk(drive):
+            if 'messages' in dirpath:
+                for x in files:
+                    if x == 'your_messages.html' and os.path.getctime(dirpath + "\\" + x) > creation_time:
+                        creation_time = os.path.getctime(dirpath + "\\" + x)
+                        rootdir = dirpath + "\\inbox\\"
+    print(rootdir)
+    return rootdir
+
+def get_drives():
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    letter = ord('A')
+    while bitmask > 0:
+        if bitmask & 1:
+            drives.append(chr(letter) + ':\\')
+        bitmask >>= 1
+        letter += 1
+    return drives
+
 def main():
     #set rootdir to end in \\inbox\\ to get total stats
     #if you only care about one person/group, then add the folder name to the end of rootdir
-    rootdir = 'D:\\Facebook Data\\2020 June No Photos\\messages\\inbox\\'
+    #find_root_dir will automatically find the total stats path eg C:\\messages\\inbox
+    drives = get_drives()
+    rootdir = find_root_dir(drives)
+    print("Found file path list")
     #if you don't want to search for a msg, leave it as ""
     msg_to_search_for = ""
     #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
