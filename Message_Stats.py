@@ -943,6 +943,7 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
     write_search.close()
 
 def find_root_dir(drives):
+    rootdir = ""
     creation_time = 0
     for drive in drives:
         for dirpath, subdirs, files in os.walk(drive):
@@ -971,30 +972,33 @@ def main():
     #find_root_dir will automatically find the total stats path eg C:\\messages\\inbox
     drives = get_drives()
     rootdir = find_root_dir(drives)
-    print("Found file path list")
-    #if you don't want to search for a msg, leave it as ""
-    msg_to_search_for = ""
-    #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
-    #if you do want a time range for the search function, change the time to datetime(year, month, day)
-    start_date = datetime.min
-    end_date = datetime.max
-    print("Creating file list")
-    file_list, path_list = create_file_list(rootdir)
-    print("Parsing file list")
-    parse_files(file_list)
-    data_list = combine_parsed_list(file_list)
-    print("Creating stats")
-    stats_list = create_stats(data_list)
-    print("Writing stats to files")
-    write_stats(path_list, stats_list)
-    if msg_to_search_for != "":
-        print("Searching for keyword")
-        search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
-        print("Writing search results to files")
-        write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
-    if len(stats_list) > 1:
-        total_stats_list = combined_stats_list(stats_list)
-        write_total_stats(rootdir, total_stats_list)
+    if rootdir != "":
+        print("Found file path list")
+        #if you don't want to search for a msg, leave it as ""
+        msg_to_search_for = ""
+        #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
+        #if you do want a time range for the search function, change the time to datetime(year, month, day)
+        start_date = datetime.min
+        end_date = datetime.max
+        print("Creating file list")
+        file_list, path_list = create_file_list(rootdir)
+        print("Parsing file list")
+        parse_files(file_list)
+        data_list = combine_parsed_list(file_list)
+        print("Creating stats")
+        stats_list = create_stats(data_list)
+        print("Writing stats to files")
+        write_stats(path_list, stats_list)
+        if msg_to_search_for != "":
+            print("Searching for keyword")
+            search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
+            print("Writing search results to files")
+            write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
+        if len(stats_list) > 1:
+            total_stats_list = combined_stats_list(stats_list)
+            write_total_stats(rootdir, total_stats_list)
+    else:
+        print("Could not find file path list, please download your Facebook Data")
 
 if __name__ == "__main__":
     main()
