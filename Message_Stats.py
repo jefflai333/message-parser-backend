@@ -970,6 +970,7 @@ def main():
     #set rootdir to end in \\inbox\\ to get total stats
     #if you only care about one person/group, then add the folder name to the end of rootdir
     #find_root_dir will automatically find the total stats path eg C:\\messages\\inbox
+    print("Finding file path list")
     drives = get_drives()
     rootdir = find_root_dir(drives)
     if rootdir != "":
