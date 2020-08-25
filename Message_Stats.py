@@ -464,7 +464,7 @@ def sent_msgs_per_day(daily_msgs_sent_per_person):
             arr[i][j] = arr[i][j]/msg_count*100
     return arr
     
-def top_sent_msgs_per_day(daily_msgs_sent_per_person):
+def top_people_sent_msgs_per_day(daily_msgs_sent_per_person):
     total_days = dict()
     for name in daily_msgs_sent_per_person:
         sent_list = daily_msgs_sent_per_person[name]
@@ -494,6 +494,27 @@ def top_sent_msgs_per_day(daily_msgs_sent_per_person):
         for j in range(1, len(arr[i])):
             arr[i][j] = arr[i][j]/msg_count*100
         arr[i].append(msg_count)
+    return arr
+
+def top_person_sent_msgs_per_day(daily_msgs_sent_per_person):
+    total_days = dict()
+    for name in daily_msgs_sent_per_person:
+        sent_list = daily_msgs_sent_per_person[name]
+        for date in sent_list:
+            day = date[0]
+            num_msgs = date[1]
+            if day in total_days:
+                total_days[day].append([name,num_msgs])
+            else:
+                total_days[day] = [[name,num_msgs]]
+    arr = [["Date","Name"]]
+    total_days_list = total_days.items()
+    total_days_list = sorted(total_days_list, key=lambda x:x[0], reverse=True)
+    for i in range(0, len(total_days_list)):
+        date = total_days_list[i][0]
+        names_and_num_msgs = total_days_list[i][1]
+        names_and_num_msgs = sorted(names_and_num_msgs, key=lambda x:x[1], reverse=True)
+        arr.append([date, names_and_num_msgs[0][0]])
     return arr
 
 def sum_msgs_per_day(date_stats, daily_msgs_per_person):
@@ -695,8 +716,10 @@ def combined_stats_list(stats_list):
     yearly_stats_list = sorted(yearly_stats_list, key=lambda x:x[0])
     yearly_group_stats_list = total_group_yearly_stats.items()
     yearly_group_stats_list = sorted(yearly_group_stats_list, key=lambda x:x[0])
-    user_of_msgs_sent_per_person = top_sent_msgs_per_day(daily_msgs_sent_per_person)
-    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list, user_of_msgs_words_count_arr, user_of_msgs_words_count_group_arr, total_words_per_chat, total_words_per_group_chat, words_sent_per_person, words_received_per_person, words_sent_per_group, words_received_per_group, max_consecutive_msgs_sent, max_consecutive_msgs_received, max_consecutive_group_msgs_sent, max_consecutive_group_msgs_received, user_of_msgs_sent_per_person]
+    user_of_msgs_top_people_sent_per_day = top_people_sent_msgs_per_day(daily_msgs_sent_per_person)
+    user_of_msgs_top_person_sent_per_day = top_person_sent_msgs_per_day(daily_msgs_sent_per_person)
+    user_of_msgs_sent_per_person = sent_msgs_per_day(daily_msgs_sent_per_person)
+    return [first_msg_count, first_msg_count_group, user_of_msgs_count_arr, user_of_msgs_count_group_arr, total_msg_per_chat, total_msg_per_group_chat, sent_per_person, received_per_person, sent_per_group, received_per_group, max_length_of_word_sent, max_length_of_word_received, max_length_of_word_group_sent, max_length_of_word_group_received, top_one_day_msg_count, top_one_day_msg_group_count, max_consecutive_days, max_consecutive_group_days, top_one_day_msg_count_sent_per_person, top_one_day_msg_count_received_per_person, top_one_day_msg_group_count_sent_per_person, top_one_day_msg_group_count_received_per_person, top_one_day_msg_count_sent, top_one_day_msg_count_received, top_one_day_msg_group_count_sent, top_one_day_msg_group_count_received, monthly_stats_list, monthly_group_stats_list, yearly_stats_list, yearly_group_stats_list, user_of_msgs_words_count_arr, user_of_msgs_words_count_group_arr, total_words_per_chat, total_words_per_group_chat, words_sent_per_person, words_received_per_person, words_sent_per_group, words_received_per_group, max_consecutive_msgs_sent, max_consecutive_msgs_received, max_consecutive_group_msgs_sent, max_consecutive_group_msgs_received, user_of_msgs_top_people_sent_per_day, user_of_msgs_top_person_sent_per_day, user_of_msgs_sent_per_person]
 
 def sort_combined_stats(list, top_num):
     list = sorted(list, key=lambda x:x[1], reverse=True)
@@ -748,8 +771,16 @@ def write_total_stats(rootdir, total_stats_list):
     max_consecutive_msgs_received = total_stats_list[39]
     max_consecutive_group_msgs_sent = total_stats_list[40]
     max_consecutive_group_msgs_received = total_stats_list[41]
-    user_of_msgs_sent_per_person = total_stats_list[42]
-    with open(rootdir + "daily_sent_msg.csv", 'w', newline='', encoding="utf-8") as myfile:
+    user_of_msgs_top_people_sent_per_day = total_stats_list[42]
+    user_of_msgs_top_person_sent_per_day = total_stats_list[43]
+    user_of_msgs_sent_per_person = total_stats_list[44]
+    with open(rootdir + "top_people_daily_sent_msg.csv", 'w', newline='', encoding="utf-8") as myfile:
+        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        wr.writerows(user_of_msgs_top_people_sent_per_day)
+    with open(rootdir + "top_person_daily_sent_msg.csv", 'w', newline='', encoding="utf-8") as myfile:
+        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        wr.writerows(user_of_msgs_top_person_sent_per_day)
+    with open(rootdir + "user_of_msgs_sent_per_person.csv", 'w', newline='', encoding="utf-8") as myfile:
         wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         wr.writerows(user_of_msgs_sent_per_person)
     stats.write("Out of the " + str(sum(first_msg_count)) + " direct messages, you started " + str(first_msg_count[0]) + " of them, ")
