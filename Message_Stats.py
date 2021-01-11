@@ -1229,6 +1229,197 @@ def main():
     else:
         print("Could not find file path list, please download your Facebook Data")
 
+
+class CollectorTarget(object):
+    def __init__(self):
+        self.names = []
+        self.data = []
+        self.times = []
+
+    def start(self, tag, attrib):
+        for attr in attrib:
+            # checks for the attributes in the html and sets the flag accordingly
+            if attr[1] == '_3-96 _2let':
+                self.flag = 'text'
+                self.data_inserted = False
+            elif attr[1] == '_3-96 _2pio _2lek _2lel':
+                self.flag = 'name'
+            elif attr[1] == '_3-94 _2lem':
+                self.flag = 'date'
+                # edge case where message has been removed, if data still hasn't been inserted at this point,
+                # that means that the message has been removed.
+                if not self.data_inserted:
+                    self.text_data.append('Message has been removed')
+        print("start %s %r" % (tag, dict(attrib)))
+
+    def end(self, tag):
+        print("end %s" % tag)
+
+    def data(self, data):
+        print("data %r" % data)
+
+    def comment(self, text):
+        print("comment %s" % text)
+
+    def close(self):
+        print("close")
+        return "closed!"
+
+    def __init__(self):
+        HTMLParser.__init__(self)
+        # initialize variables in addition to the base class
+        self.name_data = []
+        self.text_data = []
+        self.date_data = []
+        self.data = []
+        self.data_inserted = True
+        self.flag = ''
+        self.title = ''
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'title':
+            self.flag = 'title'
+        if tag == 'img' and attrs[0][1].startswith('messages'):
+            # if there are multiple images in the same message, it will enter this if statement
+            # it will append the two images into one message instead of having two seperate messages
+            if self.data_inserted:
+                self.text_data[-1] = self.text_data[-1] + ' ' + attrs[0][1]
+            else:
+                self.text_data.append(attrs[0][1])
+            self.data_inserted = True
+            self.flag = ''
+        for attr in attrs:
+            # checks for the attributes in the html and sets the flag accordingly
+            if attr[1] == '_3-96 _2let':
+                self.flag = 'text'
+                self.data_inserted = False
+            elif attr[1] == '_3-96 _2pio _2lek _2lel':
+                self.flag = 'name'
+            elif attr[1] == '_3-94 _2lem':
+                self.flag = 'date'
+                # edge case where message has been removed, if data still hasn't been inserted at this point,
+                # that means that the message has been removed.
+                if not self.data_inserted:
+                    self.text_data.append('Message has been removed')
+
+    def handle_data(self, data):
+        if self.flag == 'title':
+            self.title = data
+        elif self.flag == 'text' and not self.data_inserted:
+            self.text_data.append(data)
+            self.data_inserted = True
+        elif self.flag == 'name':
+            self.name_data.append(data)
+        # data != 'Quiet' is to check if you have been removed from the group
+        elif self.flag == 'date' and data != 'Quiet':
+            self.date_data.append(data)
+        self.flag = ''
+
+    def combine_data(self, filepath):
+        # checks to see that the length of each set of data is the same so that it can be combined into one array
+        if len(self.name_data) == len(self.text_data) and len(self.text_data) == len(self.date_data):
+            for i in range(0, len(self.name_data)):
+                self.data.append([self.name_data[i], self.text_data[i], self.date_data[i]])
+            self.data.append(self.title)
+        else:
+            print('Error Verifying Data', filepath)
+
+
+def left_pad(list_to_pad, n=1, fill_val=''):
+    return list_to_pad + [fill_val] * (n - len(list_to_pad))
+
+
+def parse_html_2(filepath):
+    start_time_data = time.time()
+    with open(filepath, 'r', encoding='utf-8') as utf_8_data:
+        data = utf_8_data.read()
+    parser = etree.HTMLParser()
+    tree = etree.parse(StringIO(data), parser)
+    keys = ["names", "texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
+    info = {key: [] for key in keys}
+    temp_info = {key: [] for key in keys}
+    # the code checks to see if this is true by looking at the different class names
+    flag = ''
+    for element in tree.iter():
+        text = element.text
+        attrib = element.attrib
+        tag = element.tag
+        if tag == "video":
+            temp_info["videos"].append(attrib["src"])
+        elif tag == "img":
+            # check for src tag in attributes and if it is a valid image by searching "messages"
+            if "src" in attrib and attrib["src"].startswith("messages"):
+                file_list = attrib["src"].split(r"/")
+                if "stickers_used" in file_list:
+                    temp_info["stickers"].append(attrib["src"])
+                else:
+                    temp_info["photos"].append(attrib["src"])
+        # tag is li for emojis, list tag
+        elif tag == "li":
+            temp_info["emojis"].append(text)
+        # "span" tag with class _idm is for call durations
+        elif tag == "span" and "class" in attrib and attrib["class"] == "_idm":
+            if "Duration" in text:
+                temp_info["call_times"].append(text)
+            else:
+                print("Duration: " + filepath)
+        elif "class" in attrib:
+            # check for attrib tag in attributes
+            if attrib["class"] == '_3-96 _2pio _2lek _2lel':
+                temp_info["names"].append(text)
+            elif attrib["class"] == '_3-96 _2let':
+                flag = "text"
+                # print("flag set to text")
+            elif attrib["class"] == '_3-94 _2lem':
+                # print("dates has been reached")
+                temp_info["dates"].append(text)
+                # once the time is append to the dates, there needs to be logic to check how much of each list is filled
+                # so that the remaining lists can be filled accordingly
+                # the lists all need to be the same length so that they can be added into the pandas dataframe after
+                # checks to see if names has length 1 before proceeding, since it should have length 1
+                # this deals with the edge case of the user being removed from a group
+                if len(temp_info["names"]) == 1:
+                    # checks to see if the sum of the lists in the dictionary is 2
+                    # if it is, that means only "names" and "dates" has info in it, meaning a message was deleted
+                    if sum(len(lst) for lst in temp_info.values()) == 2:
+                        # append 1 to the deleted messages key
+                        temp_info["deleted_messages"].append(1)
+                        # add blanks to the rest of the keys
+                        temp_info = {k: left_pad(v) for k, v in temp_info.items()}
+                    # finds the maximum length of array in list
+                    max_length = max(len(lst) for lst in temp_info.values())
+                    # in the fill val, it checks to see if the list is empty, and uses a blank value to pad if it is
+                    # otherwise, it will use the first value in the list to duplicate values
+                    # iterates through entire dictionary and left pads each one accordingly
+                    temp_info = {k: left_pad(v, n=max_length, fill_val=v[0] if v else '') for k, v in temp_info.items()}
+                    # makes a list duplicate of each emoji since every react would be applied to every duplicated
+                    # message
+                    temp_info["emojis"] = [temp_info["emojis"] for _ in range(max_length)]
+                    # once all the necessary changes are made, check to see that all the lists are the same length
+                    if sum(len(lst) for lst in temp_info.values()) % len(temp_info) == 0:
+                        # append them to the info list if the lists are the same length
+                        for key, value in temp_info.items():
+                            for val in value:
+                                info[key].append(val)
+                    else:
+                        print("Length of temp_info not the same: " + filepath)
+                        print(temp_info.items())
+                else:
+                    print("Length of names not one: " + filepath)
+                    print(temp_info.items())
+                # empty all the data since it has been added to the info dict
+                temp_info = {key: [] for key in keys}
+        # check if there exists text to be added into the list
+        elif text and flag == "text":
+            temp_info["texts"].append(text)
+            # set flag back to nothing
+            flag = ''
+    title = tree.findall("//title")[0].text
+    end_time_data = time.time()
+    # print(str(end_time_data - start_time_data))
+    return pd.DataFrame.from_dict(info)
+    # print(info_frame)
+
+
 if __name__ == "__main__":
     main()
-    
