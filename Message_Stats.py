@@ -355,7 +355,16 @@ def create_file_list(rootdir):
 
 def parse_files(file_list):
     times = list()
+    profiles = []
+    titles = []
+    # this list is nested
+    # the outer layer consists of all the different folders in which the messages can be parsed from
+    # the inner layer consists of all the .html files in each folder
     for i in range(0, len(file_list)):
+        # this profile array is used to store all the DataFrames for the one specific person/group
+        profile_per_person = []
+        # the titles from each folder will be used later to create keys
+        title = ''
         for j in range(0, len(file_list[i])):
             filepath = file_list[i][j]
             # if os.path.isfile(filepath.split(".html")[0] + ".npy"):
@@ -363,15 +372,25 @@ def parse_files(file_list):
             #    file_list[i][j] = array.tolist()
             # else:
             start_time_data = time.time()
-            with open(filepath, 'r', encoding='utf-8') as utf_8_data:
-                data = utf_8_data.read()
-            file_list[i][j] = parse_html(data, filepath)
+            title, parsed_html = parse_html_2(filepath)
+            profile_per_person.append(parsed_html)
             end_time_data = time.time()
             if j < len(file_list[i]) - 2:
                 times.append(end_time_data - start_time_data)
             # if not os.path.isfile(filepath.split(".html")[0] + ".csv"):
             #    save(filepath.split(".html")[0], asarray(file_list[i][j]))
+        # concatenates each profile per person into one profile
+        profile = pd.concat(profile_per_person)
+        # appends this to the profiles array to be concatenated later
+        if title is None:
+            print(file_list[i][0])
+        profiles.append(profile)
+        titles.append(title)
         print("Parsing File " + str(i + 1) + " out of " + str(len(file_list)) + "\n")
+    #print(titles)
+    #print(profiles)
+    combined_profile = pd.concat(profiles, keys=titles)
+    print(combined_profile)
     print("Average Time: " + str(sum(times) / len(times)))
 
 
@@ -1201,6 +1220,7 @@ def main():
     # drives = get_drives()
     # rootdir = find_root_dir(drives)
     rootdir = r'D:\Facebook Data\2020 November\messages\inbox'
+    # rootdir = r'D:\Facebook Data\2020 August\messages\inbox\JessicaZhang_Zs11Uy-bpw'
     if rootdir != "":
         print("Found file path list")
         # if you don't want to search for a msg, leave it as ""
@@ -1214,6 +1234,8 @@ def main():
         print("Parsing file list")
         parse_files(file_list)
         data_list = combine_parsed_list(file_list)
+        test = pd.DataFrame(data_list)
+        print(test)
         print("Creating stats")
         stats_list = create_stats(data_list)
         print("Writing stats to files")
@@ -1230,101 +1252,6 @@ def main():
         print("Could not find file path list, please download your Facebook Data")
 
 
-class CollectorTarget(object):
-    def __init__(self):
-        self.names = []
-        self.data = []
-        self.times = []
-
-    def start(self, tag, attrib):
-        for attr in attrib:
-            # checks for the attributes in the html and sets the flag accordingly
-            if attr[1] == '_3-96 _2let':
-                self.flag = 'text'
-                self.data_inserted = False
-            elif attr[1] == '_3-96 _2pio _2lek _2lel':
-                self.flag = 'name'
-            elif attr[1] == '_3-94 _2lem':
-                self.flag = 'date'
-                # edge case where message has been removed, if data still hasn't been inserted at this point,
-                # that means that the message has been removed.
-                if not self.data_inserted:
-                    self.text_data.append('Message has been removed')
-        print("start %s %r" % (tag, dict(attrib)))
-
-    def end(self, tag):
-        print("end %s" % tag)
-
-    def data(self, data):
-        print("data %r" % data)
-
-    def comment(self, text):
-        print("comment %s" % text)
-
-    def close(self):
-        print("close")
-        return "closed!"
-
-    def __init__(self):
-        HTMLParser.__init__(self)
-        # initialize variables in addition to the base class
-        self.name_data = []
-        self.text_data = []
-        self.date_data = []
-        self.data = []
-        self.data_inserted = True
-        self.flag = ''
-        self.title = ''
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'title':
-            self.flag = 'title'
-        if tag == 'img' and attrs[0][1].startswith('messages'):
-            # if there are multiple images in the same message, it will enter this if statement
-            # it will append the two images into one message instead of having two seperate messages
-            if self.data_inserted:
-                self.text_data[-1] = self.text_data[-1] + ' ' + attrs[0][1]
-            else:
-                self.text_data.append(attrs[0][1])
-            self.data_inserted = True
-            self.flag = ''
-        for attr in attrs:
-            # checks for the attributes in the html and sets the flag accordingly
-            if attr[1] == '_3-96 _2let':
-                self.flag = 'text'
-                self.data_inserted = False
-            elif attr[1] == '_3-96 _2pio _2lek _2lel':
-                self.flag = 'name'
-            elif attr[1] == '_3-94 _2lem':
-                self.flag = 'date'
-                # edge case where message has been removed, if data still hasn't been inserted at this point,
-                # that means that the message has been removed.
-                if not self.data_inserted:
-                    self.text_data.append('Message has been removed')
-
-    def handle_data(self, data):
-        if self.flag == 'title':
-            self.title = data
-        elif self.flag == 'text' and not self.data_inserted:
-            self.text_data.append(data)
-            self.data_inserted = True
-        elif self.flag == 'name':
-            self.name_data.append(data)
-        # data != 'Quiet' is to check if you have been removed from the group
-        elif self.flag == 'date' and data != 'Quiet':
-            self.date_data.append(data)
-        self.flag = ''
-
-    def combine_data(self, filepath):
-        # checks to see that the length of each set of data is the same so that it can be combined into one array
-        if len(self.name_data) == len(self.text_data) and len(self.text_data) == len(self.date_data):
-            for i in range(0, len(self.name_data)):
-                self.data.append([self.name_data[i], self.text_data[i], self.date_data[i]])
-            self.data.append(self.title)
-        else:
-            print('Error Verifying Data', filepath)
-
-
 def left_pad(list_to_pad, n=1, fill_val=''):
     return list_to_pad + [fill_val] * (n - len(list_to_pad))
 
@@ -1335,9 +1262,10 @@ def parse_html_2(filepath):
         data = utf_8_data.read()
     parser = etree.HTMLParser()
     tree = etree.parse(StringIO(data), parser)
-    keys = ["names", "texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
+    keys = ["title", "names", "texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
     info = {key: [] for key in keys}
     temp_info = {key: [] for key in keys}
+    title = tree.findall("//title")[0].text
     # the code checks to see if this is true by looking at the different class names
     flag = ''
     for element in tree.iter():
@@ -1384,8 +1312,10 @@ def parse_html_2(filepath):
                     if sum(len(lst) for lst in temp_info.values()) == 2:
                         # append 1 to the deleted messages key
                         temp_info["deleted_messages"].append(1)
-                        # add blanks to the rest of the keys
-                        temp_info = {k: left_pad(v) for k, v in temp_info.items()}
+                    # add the title to the dictionary
+                    temp_info["title"].append(title)
+                    # add blanks to the rest of the keys
+                    temp_info = {k: left_pad(v) for k, v in temp_info.items()}
                     # finds the maximum length of array in list
                     max_length = max(len(lst) for lst in temp_info.values())
                     # in the fill val, it checks to see if the list is empty, and uses a blank value to pad if it is
@@ -1405,8 +1335,9 @@ def parse_html_2(filepath):
                         print("Length of temp_info not the same: " + filepath)
                         print(temp_info.items())
                 else:
-                    print("Length of names not one: " + filepath)
-                    print(temp_info.items())
+                    if temp_info["dates"][0] is not None:
+                        print("Length of names not one: " + filepath)
+                        print(temp_info.items())
                 # empty all the data since it has been added to the info dict
                 temp_info = {key: [] for key in keys}
         # check if there exists text to be added into the list
@@ -1414,11 +1345,9 @@ def parse_html_2(filepath):
             temp_info["texts"].append(text)
             # set flag back to nothing
             flag = ''
-    title = tree.findall("//title")[0].text
     end_time_data = time.time()
     # print(str(end_time_data - start_time_data))
-    return pd.DataFrame.from_dict(info)
-    # print(info_frame)
+    return title, pd.DataFrame.from_dict(info)
 
 
 if __name__ == "__main__":
