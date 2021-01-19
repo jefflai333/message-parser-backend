@@ -13,70 +13,6 @@ import lxml.html
 from io import StringIO, BytesIO
 
 
-class MyHTMLParser(HTMLParser):
-    def __init__(self):
-        HTMLParser.__init__(self)
-        # initialize variables in addition to the base class
-        self.name_data = []
-        self.text_data = []
-        self.date_data = []
-        self.data = []
-        self.data_inserted = True
-        self.flag = ''
-        self.title = ''
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'title':
-            self.flag = 'title'
-        if tag == 'img' and attrs[0][1].startswith('messages'):
-            # if there are multiple images in the same message, it will enter this if statement
-            # it will append the two images into one message instead of having two seperate messages
-            if self.data_inserted:
-                self.text_data[-1] = self.text_data[-1] + ' ' + attrs[0][1]
-            else:
-                self.text_data.append(attrs[0][1])
-            self.data_inserted = True
-            self.flag = ''
-        for attr in attrs:
-            # checks for the attributes in the html and sets the flag accordingly
-            if attr[1] == '_3-96 _2let':
-                self.flag = 'text'
-                self.data_inserted = False
-            elif attr[1] == '_3-96 _2pio _2lek _2lel':
-                self.flag = 'name'
-            elif attr[1] == '_3-94 _2lem':
-                self.flag = 'date'
-                # edge case where message has been removed, if data still hasn't been inserted at this point,
-                # that means that the message has been removed.
-                if not self.data_inserted:
-                    self.text_data.append('Message has been removed')
-
-    def handle_data(self, data):
-        if self.flag == 'title':
-            self.title = data
-        elif self.flag == 'text' and not self.data_inserted:
-            self.text_data.append(data)
-            self.data_inserted = True
-        elif self.flag == 'name':
-            self.name_data.append(data)
-        # data != 'Quiet' is to check if you have been removed from the group
-        elif self.flag == 'date':
-            if data != 'Quiet':
-                self.date_data.append(data)
-            else:
-                print("THIS IS WHERE YOU HAVE BEEN REMOVED FROM THE GROUP")
-        self.flag = ''
-
-    def combine_data(self, filepath):
-        # checks to see that the length of each set of data is the same so that it can be combined into one array
-        if len(self.name_data) == len(self.text_data) and len(self.text_data) == len(self.date_data):
-            for i in range(0, len(self.name_data)):
-                self.data.append([self.name_data[i], self.text_data[i], self.date_data[i]])
-            self.data.append(self.title)
-        else:
-            print('Error Verifying Data', filepath)
-
-
 def messages_per_person(data):
     count_per_person = dict()
     for person in data:
@@ -372,7 +308,7 @@ def parse_files(file_list):
             #    file_list[i][j] = array.tolist()
             # else:
             start_time_data = time.time()
-            title, parsed_html = parse_html_2(filepath)
+            title, parsed_html = parse_html(filepath)
             profile_per_person.append(parsed_html)
             end_time_data = time.time()
             if j < len(file_list[i]) - 2:
@@ -389,29 +325,6 @@ def parse_files(file_list):
     combined_profile = pd.concat(profiles, keys=titles)
     print("Average Time: " + str(sum(times) / len(times)))
     return combined_profile
-
-
-def parse_html(data, filepath):
-    parser = MyHTMLParser()
-    parser.feed(data)
-    parser.combine_data(filepath)
-    print(parser.data[-1])
-    return parser.data
-
-
-def combine_parsed_list(parsed_list):
-    data_list = []
-    for people in parsed_list:
-        arr = []
-        title = ''
-        for messages in people:
-            title = messages[-1]
-            del messages[-1]
-            for sublist in messages:
-                arr.append(sublist)
-        arr.append(title)
-        data_list.append(arr)
-    return data_list
 
 
 def max_consecutive_msgs_sent_and_received(max_consecutive_msgs_sent, max_consecutive_msgs_received,
@@ -1231,19 +1144,18 @@ def main():
         print("Parsing file list")
         test = parse_files(file_list)
         print(test)
-        data_list = combine_parsed_list(file_list)
         print("Creating stats")
-        stats_list = create_stats(data_list)
+        # stats_list = create_stats(data_list)
         print("Writing stats to files")
-        write_stats(path_list, stats_list)
+        # write_stats(path_list, stats_list)
         if msg_to_search_for != "":
             print("Searching for keyword")
-            search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
+            # search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
             print("Writing search results to files")
-            write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
-        if len(stats_list) > 1:
-            total_stats_list = combined_stats_list(stats_list)
-            write_total_stats(rootdir, total_stats_list)
+            # write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
+        # if len(stats_list) > 1:
+        #    total_stats_list = combined_stats_list(stats_list)
+        #    write_total_stats(rootdir, total_stats_list)
     else:
         print("Could not find file path list, please download your Facebook Data")
 
@@ -1252,7 +1164,7 @@ def left_pad(list_to_pad, n=1, fill_val=''):
     return list_to_pad + [fill_val] * (n - len(list_to_pad))
 
 
-def parse_html_2(filepath):
+def parse_html(filepath):
     start_time_data = time.time()
     with open(filepath, 'r', encoding='utf-8') as utf_8_data:
         data = utf_8_data.read()
