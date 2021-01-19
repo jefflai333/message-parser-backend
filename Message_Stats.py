@@ -382,16 +382,13 @@ def parse_files(file_list):
         # concatenates each profile per person into one profile
         profile = pd.concat(profile_per_person)
         # appends this to the profiles array to be concatenated later
-        if title is None:
-            print(file_list[i][0])
-        profiles.append(profile)
-        titles.append(title)
+        if title is not None:
+            profiles.append(profile)
+            titles.append(title)
         print("Parsing File " + str(i + 1) + " out of " + str(len(file_list)) + "\n")
-    #print(titles)
-    #print(profiles)
     combined_profile = pd.concat(profiles, keys=titles)
-    print(combined_profile)
     print("Average Time: " + str(sum(times) / len(times)))
+    return combined_profile
 
 
 def parse_html(data, filepath):
@@ -1232,10 +1229,9 @@ def main():
         print("Creating file list")
         file_list, path_list = create_file_list(rootdir)
         print("Parsing file list")
-        parse_files(file_list)
-        data_list = combine_parsed_list(file_list)
-        test = pd.DataFrame(data_list)
+        test = parse_files(file_list)
         print(test)
+        data_list = combine_parsed_list(file_list)
         print("Creating stats")
         stats_list = create_stats(data_list)
         print("Writing stats to files")
@@ -1262,7 +1258,7 @@ def parse_html_2(filepath):
         data = utf_8_data.read()
     parser = etree.HTMLParser()
     tree = etree.parse(StringIO(data), parser)
-    keys = ["title", "names", "texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
+    keys = ["names", "texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
     info = {key: [] for key in keys}
     temp_info = {key: [] for key in keys}
     title = tree.findall("//title")[0].text
@@ -1312,8 +1308,6 @@ def parse_html_2(filepath):
                     if sum(len(lst) for lst in temp_info.values()) == 2:
                         # append 1 to the deleted messages key
                         temp_info["deleted_messages"].append(1)
-                    # add the title to the dictionary
-                    temp_info["title"].append(title)
                     # add blanks to the rest of the keys
                     temp_info = {k: left_pad(v) for k, v in temp_info.items()}
                     # finds the maximum length of array in list
