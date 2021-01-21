@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 from lxml import etree
 import lxml.html
 from io import StringIO, BytesIO
+import argparse
 
 
 def messages_per_person(data):
@@ -1159,6 +1160,13 @@ def main():
         #    write_total_stats(rootdir, total_stats_list)
     else:
         print("Could not find file path list, please download your Facebook Data")
+
+
+def parse_arguments():
+    command_line_parser = argparse.ArgumentParser(description='Processes Facebook Messenger Data')
+    command_line_parser.add_argument("-p", "--path", help="Add the path where the Facebook Data is (default is your current location)", default=pathlib.Path().absolute())
+    command_line_parser.add_argument("-s", "--search", help="Searches for a keyword in the files (default is nothing)", default="")
+    return command_line_parser.parse_args()
 
 
 def left_pad(list_to_pad, n=1, fill_val=''):
