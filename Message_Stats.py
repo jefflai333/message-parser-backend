@@ -315,8 +315,9 @@ def parse_files(file_list):
                 times.append(end_time_data - start_time_data)
             # if not os.path.isfile(filepath.split(".html")[0] + ".csv"):
             #    save(filepath.split(".html")[0], asarray(file_list[i][j]))
-        # concatenates each profile per person into one profile
-        profile = pd.concat(profile_per_person)
+        # concatenates each profile per person into one profile, ignoring the index to make the index unique for
+        # each profile
+        profile = pd.concat(profile_per_person, ignore_index=True)
         # appends this to the profiles array to be concatenated later
         if title is not None:
             profiles.append(profile)
