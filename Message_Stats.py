@@ -1081,7 +1081,6 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
     for i in range(0, len(path_list)):
         search = search_list[i][0]
         write_search = codecs.open(path_list[i] + "search.txt", "w", "utf-8")
-        match = ""
         if len(search) == 0:
             match = "No matches were "
         elif len(search) == 1:
@@ -1125,6 +1124,7 @@ def get_drives():
 
 
 def main():
+    args = parse_arguments()
     # set rootdir to end in \\inbox\\ to get total stats
     # if you only care about one person/group, then add the folder name to the end of rootdir
     # find_root_dir will automatically find the total stats path eg C:\\messages\\inbox
@@ -1134,7 +1134,7 @@ def main():
     rootdir = r'D:\Facebook Data\2020 November\messages\inbox'
     # rootdir = r'D:\Facebook Data\2020 August\messages\inbox\JessicaZhang_Zs11Uy-bpw'
     if rootdir != "":
-        print("Found file path list")
+        print("Found file path list at: " + args.path)
         # if you don't want to search for a msg, leave it as ""
         msg_to_search_for = ""
         # if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
@@ -1159,13 +1159,19 @@ def main():
         #    total_stats_list = combined_stats_list(stats_list)
         #    write_total_stats(rootdir, total_stats_list)
     else:
-        print("Could not find file path list, please download your Facebook Data")
+        print("Could not find file path list, please download your Facebook Data or check that you have the right filepath")
 
 
 def parse_arguments():
     command_line_parser = argparse.ArgumentParser(description='Processes Facebook Messenger Data')
     command_line_parser.add_argument("-p", "--path", help="Add the path where the Facebook Data is (default is your current location)", default=pathlib.Path().absolute())
     command_line_parser.add_argument("-s", "--search", help="Searches for a keyword in the files (default is nothing)", default="")
+    command_line_parser.add_argument("-ed", "--end_date",
+                                     help="End date for what you want to search (default is max date)",
+                                     default=datetime.max)
+    command_line_parser.add_argument("-sd", "--start_date",
+                                     help="Start date for what you want to search (default is min date)",
+                                     default=datetime.min)
     return command_line_parser.parse_args()
 
 
