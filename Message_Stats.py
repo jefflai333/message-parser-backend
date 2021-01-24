@@ -290,6 +290,13 @@ def create_file_list(rootdir):
     return file_list, path_list
 
 
+def analyze_profile(title, profile):
+    # locates each key and adds them to the things to be checked
+    keys = ["texts", "photos", "stickers", "videos", "dates", "emojis", "call_times", "deleted_messages"]
+    for key in keys:
+        print(profile.loc[profile[key] != "", [key, "names"]].groupby(["names"]).count())
+
+
 def parse_files(file_list):
     times = list()
     profiles = []
@@ -323,6 +330,7 @@ def parse_files(file_list):
         if title is not None:
             profiles.append(profile)
             titles.append(title)
+            analyzed_profile = analyze_profile(title, profile)
         print("Parsing File " + str(i + 1) + " out of " + str(len(file_list)) + "\n")
     combined_profile = pd.concat(profiles, keys=titles)
     print("Average Time: " + str(sum(times) / len(times)))
@@ -1233,6 +1241,7 @@ def parse_html(filepath):
                     # checks to see if the sum of the lists in the dictionary is 2
                     # if it is, that means only "names" and "dates" has info in it, meaning a message was deleted
                     if sum(len(lst) for lst in temp_info.values()) == 2:
+                        print(temp_info["dates"])
                         # append 1 to the deleted messages key
                         temp_info["deleted_messages"].append(1)
                     # add blanks to the rest of the keys
@@ -1272,4 +1281,20 @@ def parse_html(filepath):
 
 
 if __name__ == "__main__":
+    filepath = r'D:\Facebook Data\2020 August\messages\inbox\\JessicaZhang_Zs11Uy-bpw\message_1.html'
+    filepath1 = r'D:/Facebook Data/2020 August/messages/inbox/ViveLaIgor_SvLLF-h9cg/message_1.html'
+
+    ans1 = parse_html(filepath)
+    ans2 = parse_html(filepath1)
+    frames = [ans1]
+    start_time_data = time.time()
+    with open(filepath, 'r', encoding='utf-8') as utf_8_data:
+        data = utf_8_data.read()
+    parser = etree.HTMLParser()
+    tree = etree.parse(StringIO(data), parser)
+    tags = set()
+    for element in tree.iter():
+        tags.add(element.tag)
+    end_time_data = time.time()
+    print(str(end_time_data - start_time_data))
     main()
