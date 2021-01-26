@@ -1142,7 +1142,7 @@ def main():
     rootdir = r'D:\Facebook Data\2020 November\messages\inbox'
     # rootdir = r'D:\Facebook Data\2020 August\messages\inbox\JessicaZhang_Zs11Uy-bpw'
     if rootdir != "":
-        print("Found file path list at: " + args.path)
+        print("Found file path list at: " + str(args.path))
         # if you don't want to search for a msg, leave it as ""
         msg_to_search_for = ""
         # if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
@@ -1207,7 +1207,7 @@ def parse_html(filepath):
             temp_info["videos"].append(attrib["src"])
         elif tag == "img":
             # check for src tag in attributes and if it is a valid image by searching "messages"
-            if "src" in attrib and attrib["src"].startswith("messages"):
+            if "src" in attrib and (attrib["src"].startswith("messages") or "interncache-frc" in attrib["src"]):
                 file_list = attrib["src"].split(r"/")
                 if "stickers_used" in file_list:
                     temp_info["stickers"].append(attrib["src"])
