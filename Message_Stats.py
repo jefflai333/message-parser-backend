@@ -4,8 +4,8 @@ from html.entities import name2codepoint
 from operator import itemgetter
 from natsort import natsort_key, natsorted, ns
 from datetime import datetime, date
-from ctypes import windll
-from numpy import asarray, save, load
+#from numpy import asarray, save, load
+import argparse
 
 
 class MyHTMLParser(HTMLParser):
@@ -331,15 +331,15 @@ def parse_files(file_list):
     for i in range(0, len(file_list)):
         for j in range(0, len(file_list[i])):
             filepath = file_list[i][j]
-            if os.path.isfile(filepath.split(".html")[0]+".npy"):
-                array = load(filepath.split(".html")[0]+".npy", allow_pickle=True)
-                file_list[i][j] = array.tolist()
-            else:
-                with open(filepath, 'r', encoding='utf-8') as utf_8_data:
-                    data = utf_8_data.read()
-                file_list[i][j] = parse_html(data, filepath)
-            if not os.path.isfile(filepath.split(".html")[0]+".csv"):
-                save(filepath.split(".html")[0], asarray(file_list[i][j]))
+            #if os.path.isfile(filepath.split(".html")[0]+".npy"):
+                #array = load(filepath.split(".html")[0]+".npy", allow_pickle=True)
+                #file_list[i][j] = array.tolist()
+            #else:
+            with open(filepath, 'r', encoding='utf-8') as utf_8_data:
+                data = utf_8_data.read()
+            file_list[i][j] = parse_html(data, filepath)
+            #if not os.path.isfile(filepath.split(".html")[0]+".csv"):
+                #save(filepath.split(".html")[0], asarray(file_list[i][j]))
         print("Parsing File " + str(i+1) + " out of " + str(len(file_list)) + "\n")
 
 def parse_html(data, filepath):
@@ -1052,49 +1052,26 @@ def write_search_list(path_list, search_list, msg_to_search_for, start_date, end
             time = msgs_found[2]
             write_search.write(name + " at " + str(time) + ": " + msg + "\n")
     write_search.close()
-
-def find_root_dir(drives):
-    rootdir = ""
-    creation_time = 0
-    for drive in drives:
-        for dirpath, subdirs, files in os.walk(drive):
-            if 'messages' in dirpath:
-                for x in files:
-                    if x == 'your_messages.html' and os.path.getctime(dirpath + "\\" + x) > creation_time:
-                        creation_time = os.path.getctime(dirpath + "\\" + x)
-                        rootdir = dirpath + "\\inbox\\"
-    print(rootdir)
-    return rootdir
-
-def get_drives():
-    drives = []
-    bitmask = windll.kernel32.GetLogicalDrives()
-    letter = ord('A')
-    while bitmask > 0:
-        if bitmask & 1:
-            drives.append(chr(letter) + ':\\')
-        bitmask >>= 1
-        letter += 1
-    return drives
+    
+def parse_arguments():
+    command_line_parser = argparse.ArgumentParser(description='Processes Facebook Messenger Data')
+    command_line_parser.add_argument("-p", "--path", help="Add the path where the Facebook Data is (default is your current location)", default=pathlib.Path().absolute())
+    command_line_parser.add_argument("-s", "--search", help="Searches for a keyword in the files (default is nothing)", default="")
+    command_line_parser.add_argument("-ed", "--end_date",
+                                     help="End date for what you want to search (default is max date)",
+                                     default=datetime.max)
+    command_line_parser.add_argument("-sd", "--start_date",
+                                     help="Start date for what you want to search (default is min date)",
+                                     default=datetime.min)
+    return command_line_parser.parse_args()
 
 def main():
-    #set rootdir to end in \\inbox\\ to get total stats
-    #if you only care about one person/group, then add the folder name to the end of rootdir
-    #find_root_dir will automatically find the total stats path eg C:\\messages\\inbox
-    print("Finding file path list")
-    #drives = get_drives()
-    #rootdir = find_root_dir(drives)
-    rootdir = r'D:\Facebook Data\2020 August\messages\inbox\\'
-    if rootdir != "":
-        print("Found file path list")
-        #if you don't want to search for a msg, leave it as ""
-        msg_to_search_for = ""
-        #if you don't want a time range for the search function, leave start_date as datetime.min and end_date as datetime.max
-        #if you do want a time range for the search function, change the time to datetime(year, month, day)
-        start_date = datetime.min
-        end_date = datetime.max
+    args = parse_arguments()
+    print("File path list specified: " + str(args.path))
+    if "inbox" in str(args.path).split("\\"):
+        msg_to_search_for = args.search
         print("Creating file list")
-        file_list, path_list = create_file_list(rootdir)
+        file_list, path_list = create_file_list(str(args.path))
         print("Parsing file list")
         parse_files(file_list)
         data_list = combine_parsed_list(file_list)
@@ -1104,14 +1081,14 @@ def main():
         write_stats(path_list, stats_list)
         if msg_to_search_for != "":
             print("Searching for keyword")
-            search_list = create_search_list(data_list, msg_to_search_for, start_date, end_date)
+            search_list = create_search_list(data_list, msg_to_search_for, args.start_date, args.end_date)
             print("Writing search results to files")
-            write_search_list(path_list, search_list, msg_to_search_for, start_date, end_date)
+            write_search_list(path_list, search_list, msg_to_search_for, args.start_date, args.end_date)
         if len(stats_list) > 1:
             total_stats_list = combined_stats_list(stats_list)
-            write_total_stats(rootdir, total_stats_list)
+            write_total_stats(str(args.path), total_stats_list)
     else:
-        print("Could not find file path list, please download your Facebook Data")
+        print("Cannot find inbox in file path, change your file path using --path")
 
 if __name__ == "__main__":
     main()
