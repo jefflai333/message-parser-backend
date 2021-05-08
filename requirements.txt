@@ -2,3 +2,4 @@ emoji==0.5.4
 natsort==7.0.1
 virtualenv==20.4.6
 pathlib==1.0.1
+wheel==0.36.2
