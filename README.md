@@ -1,7 +1,8 @@
 # Message Parser
-# To download Facebook Messenger Files, go to Settings -> Your Facebook Information -> Download Your Information
-# You can choose what to download, but you have to download Messages in HTML format for this parser to work
-## Info about the steps can be found at https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/
+## More info about the steps can be found at https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/
+# Step 0: Download Facebook Data
+## Go to Settings -> Your Facebook Information -> Download Your Information
+### You can choose what to download, but you have to download Messages in HTML format for this parser to work
 # Step 1: Install Python 
 Go to https://www.python.org/downloads/ and install the latest version of Python 
 # Step 2: Confirm that you have pip
