@@ -17,6 +17,7 @@ class MyHTMLParser(HTMLParser):
         self.date_data = []
         self.data = []
         self.data_inserted = True
+        self.name_flag = True
         self.flag = ''
         self.title = ''
 
@@ -37,8 +38,12 @@ class MyHTMLParser(HTMLParser):
             if attr[1] == '_3-96 _2let': 
                 self.flag = 'text'
                 self.data_inserted = False
+                # edge case where user has deleted their Facebook profile
+                if self.name_flag == False:
+                    self.name_data.append('Deleted User')
             elif attr[1] == '_3-96 _2pio _2lek _2lel':
                 self.flag = 'name'
+                self.name_flag = False
             elif attr[1] == '_3-94 _2lem':
                 self.flag = 'date'
                 #edge case where message has been removed, if data still hasn't been inserted at this point,
@@ -52,8 +57,9 @@ class MyHTMLParser(HTMLParser):
         elif self.flag == 'text' and self.data_inserted == False:
             self.text_data.append(data)
             self.data_inserted = True
-        elif self.flag == 'name':
+        elif self.flag == 'name' and self.name_flag == False:
             self.name_data.append(data)
+            self.name_flag = True
         #data != 'Quiet' is to check if you have been removed from the group
         elif self.flag == 'date' and data != 'Quiet':
             self.date_data.append(data)
@@ -346,7 +352,6 @@ def parse_html(data, filepath):
     parser = MyHTMLParser()
     parser.feed(data)
     parser.combine_data(filepath)
-    print(parser.data[-1])
     return parser.data
 
 def combine_parsed_list(parsed_list):
