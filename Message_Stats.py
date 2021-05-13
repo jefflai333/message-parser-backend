@@ -315,7 +315,7 @@ def create_file_list(rootdir):
     for subdir, dirs, files in os.walk(rootdir):
         for filename in files:
             filepath = subdir + os.sep + filename
-            if filepath.endswith(".html"):
+            if filepath.endswith(".html") and "message" in filename:
                 #checks to see if the html is from the same person (i.e prevFilepath is the same)
                 #adds it into the same array if so
                 if subdir + os.sep == prevFilepath:
