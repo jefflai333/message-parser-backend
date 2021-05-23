@@ -19,13 +19,21 @@ Go to https://www.python.org/downloads/ and install the latest version of Python
 `py -m pip install --user virtualenv`
 ## Linux + Mac:
 `python3 -m pip install --user virtualenv`
-# Step 3: Create a virtual environment
-## Go to this directory (use cd) and run:
+# Step 4: Create a GitHub account (if you don't already have one)
+Go to https://github.com/join?source=login to create one
+# Step 5: Get this repository locally on your computer
+## Option 1: Install GitHub Desktop
+Follow instructions at https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop
+## Option 2: Install Git
+### Go to the directory you would like to clone the repository at (use cd PATH_NAME) and run
+`git clone https://github.com/jefflai333/Message_Parser.git`
+# Step 6: Create a virtual environment
+## Go to the directory where the repository is located (use cd PATH_NAME) and run:
 ## Windows:
 `py -m venv env`
 ## Linux + Mac:
 `python3 -m venv env`
-# Step 4: Activate the virtual environment
+# Step 7: Activate the virtual environment
 ## Windows:
 `.\env\Scripts\activate`
 ### To confirm it worked:
@@ -37,7 +45,7 @@ Go to https://www.python.org/downloads/ and install the latest version of Python
 `which python
 .../env/bin/python`
 #### Note: To leave the virtual environemnt, run `deactivate`
-# Step 5: Install Dependencies
+# Step 8: Install Dependencies
 ## Windows:
 `py -m pip install -r requirements.txt`
 ## Linux + Mac:
