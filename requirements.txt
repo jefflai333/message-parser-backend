@@ -6,3 +6,4 @@ wheel==0.36.2
 ftfy==6.0
 psycopg2
 Flask
+flask-cors
