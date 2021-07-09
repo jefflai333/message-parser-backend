@@ -2,7 +2,7 @@ import psycopg2
 from datetime import datetime
 
 def message_indexer(jsonData):
-    conn = psycopg2.connect(dbname="test", user="postgres", password="password", host="0.0.0.0", port="5433")
+    conn = psycopg2.connect(dbname="test", user="postgres", password="password", host="localhost", port="5433")
     cur = conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, sender VARCHAR(255) NOT NULL, date TIMESTAMP NOT NULL, message VARCHAR(4095), type VARCHAR(63) NOT NULL, PRIMARY KEY (id));")
     for json_key, json_value in jsonData.items():

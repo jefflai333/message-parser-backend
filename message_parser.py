@@ -2,7 +2,7 @@ import json
 from ftfy import fix_text
 
 def message_parser():
-    with open ('message_10.json','r', encoding="utf8") as f:
+    with open ('./test/message_10.json','r', encoding="utf8") as f:
         jsonData = json.loads(f.read())
     return jsonData
 
