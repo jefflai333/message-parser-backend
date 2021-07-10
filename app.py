@@ -8,7 +8,10 @@ CORS(app)
 
 @app.route("/table", methods=["GET"])
 def show_stats():
-    count = message_querer.query_aggregate_data_from_db()
+    stats = message_querer.query_aggregate_data_from_db()
     return {
-        "count": count[0]
+        "count": stats[0],
+        "received_messages": stats[1],
+        "sent_messages": stats[2],
+        "title": stats[3]
     }
