@@ -69,3 +69,6 @@ def test_check_no_reactions_in_messages():
 
 def test_check_no_type_in_messages():
     assert not message_parser.validate_messages(test_data.no_type_array)
+
+def test_json_file_read():
+    assert message_parser.message_parser("./tests/message_test.json") == test_data.returned_json_data

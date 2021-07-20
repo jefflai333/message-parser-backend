@@ -420,3 +420,32 @@ no_type_array = [
       ],
     }
   ]
+
+returned_json_data = {
+  "participants": [
+    {
+      "name": "Jessica Zhang"
+    },
+    {
+      "name": "\u00f0\u009f\u0098\u0086Jeff Lai"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Jessica Zhang",
+      "timestamp_ms": 1565582588971,
+      "content": "It\u00e2\u0080\u0099s up to the 220 gods now",
+      "reactions": [
+        {
+          "reaction": "\u00f0\u009f\u0098\u0086",
+          "actor": "Jeff Lai"
+        }
+      ],
+      "type": "Generic"
+    }
+  ],
+  "title": "\u00f0\u009f\u0098\u0086Jessica Zhang",
+  "is_still_participant": True,
+  "thread_type": "Regular",
+  "thread_path": "\u00f0\u009f\u0098\u0086inbox/JessicaZhang_Zs11Uy-bpw"
+}
