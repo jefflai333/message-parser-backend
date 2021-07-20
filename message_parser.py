@@ -3,7 +3,7 @@ import re
 from ftfy import fix_text
 
 
-def message_parser(file):
+def parse_json(file):
     with open(file, 'r', encoding="utf8") as f:
         jsonData = json.loads(f.read())
     return jsonData

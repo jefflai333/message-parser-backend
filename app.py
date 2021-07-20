@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
-import message_querer
+from . import message_querer
+from . import message_parser
 
 app = Flask(__name__)
 CORS(app)
@@ -15,3 +16,8 @@ def show_stats():
         "sent_messages": stats[2],
         "title": stats[3]
     }
+
+@app.route("/add", methods=["POST"])
+def add_stats():
+    file = request.form["file"]
+    return message_parser.parse_json(file)
