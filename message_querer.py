@@ -1,14 +1,13 @@
 import psycopg2
 
 
-def query_aggregate_data_from_db():
-    try:
+class MessageQuerer:
+    def __init__(self) -> None:
+        pass
+
+    def query_aggregate_data_from_db():
         conn = psycopg2.connect(dbname="test", user="postgres",
-                            password="password", host="localhost", port="5433")
-    except Exception as err:
-        print("error msg:", err)
-        conn = None
-    if conn != None:
+                                password="password", host="localhost", port="5433")
         cur = conn.cursor()
         cur.execute(
             "SELECT COUNT(*), COUNT(CASE WHEN title=sender then 1 ELSE NULL END), COUNT(CASE WHEN title!=sender then 1 ELSE NULL END) from messages;")
@@ -19,4 +18,3 @@ def query_aggregate_data_from_db():
         cur.close()
         conn.close()
         return total_rows
-    return None
