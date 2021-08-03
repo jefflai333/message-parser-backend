@@ -10,8 +10,8 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.before_first_request
-def before_first_request():
+@app.before_request
+def before_request():
     try:
         conn = psycopg2.connect(dbname="test", user="postgres",
                                 password="password", host="localhost", port="5433")
@@ -20,7 +20,7 @@ def before_first_request():
         print("error msg:", err)
         os._exit(0)
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, sender VARCHAR(255) NOT NULL, date TIMESTAMP NOT NULL, message VARCHAR(4095), type VARCHAR(63) NOT NULL, title VARCHAR(255), PRIMARY KEY (id));")
+    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, sender VARCHAR(255) NOT NULL, date TIMESTAMP NOT NULL, message VARCHAR(64000), type VARCHAR(63) NOT NULL, title VARCHAR(255), PRIMARY KEY (id));")
     conn.commit()
     cur.close()
     conn.close()
@@ -41,6 +41,6 @@ def show_stats():
 def add_stats():
     file = request.form["file"]
     message = MessageParser(file)
-    messageIndexer = MessageIndexer(message.conversation)
+    messageIndexer = MessageIndexer(message.listOfConversations)
     messageIndexer.message_indexer()
     return {"status": 200}
