@@ -17,13 +17,15 @@ class ConversationManager:
         if conversation.thread_path is None:
             print("thread_path doesn't exist")
             return False
-        for message in conversation.messages:
-            if not self.message_manager.is_valid_message(message):
-                print("error with message validation")
-                return False
+        participants = []
         for participant in conversation.participants:
             if not self.participant_manager.is_valid_participant(participant):
                 print("error with participant validation")
+                return False
+            participants.append(participant.name)
+        for message in conversation.messages:
+            if not self.message_manager.is_valid_message(message, participants):
+                print("error with message validation")
                 return False
         return True
 

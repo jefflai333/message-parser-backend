@@ -22,12 +22,15 @@ class MessageManager:
             return False
         return True
 
-    def is_valid_message(self, message):
+    def is_valid_message(self, message, participants):
         requiredAttrs = ["sender_name", "timestamp_ms", "content"]
         for attrs in requiredAttrs:
             if not hasattr(message, attrs):
                 print("Missing attrs in message")
                 return False
+        if message.sender_name not in participants:
+            print("sender_name not in participants")
+            return False
         if getsizeof(message.sender_name) > 255:
             print("Name too long")
             return False
