@@ -3,6 +3,7 @@ from flask_cors import CORS
 from . import MessageQuerer
 from . import MessageParser
 from . import MessageIndexer
+from .controllers.conversation_controller import ConversationController
 import psycopg2
 import os
 
@@ -20,13 +21,13 @@ def before_request():
         print("error msg:", err)
         os._exit(0)
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, sender VARCHAR(255) NOT NULL, date TIMESTAMP NOT NULL, message VARCHAR(64000), conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE);")
     cur.execute(
         "CREATE TABLE IF NOT EXISTS conversations (id SERIAL, thread_path VARCHAR(255) NOT NULL, UNIQUE(thread_path), PRIMARY KEY (id));")
     cur.execute(
         "CREATE TABLE IF NOT EXISTS participants (id SERIAL, name VARCHAR(255) NOT NULL, PRIMARY KEY (id));")
+    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, date TIMESTAMP NOT NULL, message VARCHAR(64000), conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE);")
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS conversations_participants (conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (conversation_id, participant_id), FOREIGH KEY (conversation_id) REFERENCES conversations(id) ON UPDATE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON UPDATE CASCADE;")
+        "CREATE TABLE IF NOT EXISTS conversations_participants (conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (conversation_id, participant_id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON UPDATE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON UPDATE CASCADE);")
     conn.commit()
     cur.close()
     conn.close()
@@ -46,7 +47,6 @@ def show_stats():
 @app.route("/add", methods=["POST"])
 def add_stats():
     file = request.form["file"]
-    message = MessageParser(file)
-    messageIndexer = MessageIndexer(message.listOfConversations)
-    messageIndexer.message_indexer()
+    conversation_controller = ConversationController()
+    conversation_controller.add_json_to_db(file)
     return {"status": 200}

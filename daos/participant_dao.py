@@ -12,11 +12,11 @@ class ParticipantDAO():
         # insert into participants table
         name = participant.name
         cur.execute(
-            "INSERT INTO participants (name) VALUES (%s) RETURNING id", (name))
+            "INSERT INTO participants (name) VALUES ('{0}') RETURNING id;".format(name))
         participant_id = cur.fetchone()[0]
         # insert into conversations_participants table
         cur.execute(
-            "INSERT INTO conversations_participants (conversation_id, participant_id) VALUES (%s, %s)", (conversation_id, participant_id))
+            "INSERT INTO conversations_participants (conversation_id, participant_id) VALUES ({0}, {1});".format(conversation_id, participant_id))
         conn.commit()
         cur.close()
         conn.close()

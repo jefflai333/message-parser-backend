@@ -15,8 +15,15 @@ class ConversationDAO():
         # insert into conversations table
         thread_path = conversation.thread_path
         cur.execute(
-            "INSERT INTO conversations (thread_path) VALUES (%s) RETURNING id;", thread_path)
-        conversation_id = cur.fetchone()[0]
+                "SELECT id from conversations where \"thread_path\" = '{0}';".format(thread_path))
+        conversation_id = cur.fetchone()
+        print(conversation_id)
+        if conversation_id is None:
+            cur.execute(
+                "INSERT INTO conversations (thread_path) VALUES ('{0}') RETURNING id;".format(thread_path))
+            conversation_id = cur.fetchone()[0]
+        else:
+            conversation_id = conversation_id[0]
         conn.commit()
         cur.close()
         conn.close()
@@ -31,7 +38,7 @@ class ConversationDAO():
                                 password="password", host="localhost", port="5433")
         cur = conn.cursor()
         cur.execute(
-            "SELECT id from conversations where thread_path = %s;", thread_path)
+            "SELECT id from conversations where thread_path = '{0}';".format(thread_path))
         rows = cur.fetchone()
         conn.commit()
         cur.close()

@@ -1,6 +1,5 @@
 import psycopg2
 from datetime import datetime
-from .conversation import Conversation
 
 
 class MessageIndexer():

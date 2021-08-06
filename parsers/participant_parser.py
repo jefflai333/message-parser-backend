@@ -5,7 +5,7 @@ class ParticipantParser:
     def __init__(self):
         pass
 
-    def parse_participant(d):
+    def parse_participant(self, d):
         participant = Participant()
         if not isinstance(d, dict):
             return participant

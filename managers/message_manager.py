@@ -23,7 +23,7 @@ class MessageManager:
         return True
 
     def is_valid_message(self, message, participants):
-        requiredAttrs = ["sender_name", "timestamp_ms", "content"]
+        requiredAttrs = ["sender_name", "date", "content"]
         for attrs in requiredAttrs:
             if not hasattr(message, attrs):
                 print("Missing attrs in message")
@@ -37,8 +37,8 @@ class MessageManager:
         if getsizeof(message.content) > 65535:
             print("Content too long")
             return False
-        if (message.timestamp_ms) < 0:
-            print("Negative timestamp")
+        if message.date is None:
+            print("Timestamp does not exist")
             return False
         return True
         # optionalKeys = {

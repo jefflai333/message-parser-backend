@@ -33,24 +33,3 @@ class ConversationParser:
         if "thread_path" in json and isinstance(json["thread_path"], str) and "_" in json["thread_path"]:
             conversation.add_thread_path(json["thread_path"].split("_", 1)[1])
         return conversation
-
-    def create_list_of_messages(self, messages):
-        validated_messages = []
-        for message in messages:
-            if self.validate_message(message):
-                validated_messages.append(self.create_message_model(message))
-            else:
-                print("Error parsing message", message)
-        return validated_messages
-
-    def create_message_model(self, message):
-        optionalParams = {
-            "content": "",
-            "reactions": [],
-            "photos": [],
-            "share": {},
-        }
-        for key in optionalParams.keys():
-            if key in message:
-                optionalParams[key] = message[key]
-        return Message(message["sender_name"], message["timestamp_ms"], optionalParams["content"], optionalParams["reactions"], message["type"], optionalParams["photos"], optionalParams["share"])

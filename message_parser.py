@@ -3,7 +3,6 @@ import os
 import pathlib
 from natsort import natsort_key
 from ftfy import fix_text
-from .conversation import Conversation
 
 
 class MessageParser():

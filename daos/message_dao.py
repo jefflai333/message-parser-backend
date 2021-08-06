@@ -11,13 +11,13 @@ class MessageDAO():
         cur = conn.cursor()
         # insert into messages table
         content = message.content
-        timestamp = message.timestamp
+        date = message.date
         sender_name = message.sender_name
         # guaranteed sender name matching name in participants field due to validation of json
-        cur.execute("SELECT id from participants WHERE name = %s", sender_name)
+        cur.execute("SELECT id from participants WHERE name = '{0}';".format(sender_name))
         participant_id = cur.fetchone()[0]
         cur.execute(
-            "INSERT INTO messages (content, timestamp, conversation_id, participant_id) VALUES (%s, %s, %s, %s)", (content, timestamp, conversation_id, participant_id))
+            "INSERT INTO messages (message, date, conversation_id, participant_id) VALUES ('{0}', '{1}', {2}, {3});".format(content, date, conversation_id, participant_id))
         conn.commit()
         cur.close()
         conn.close()
