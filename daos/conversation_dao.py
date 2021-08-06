@@ -17,7 +17,6 @@ class ConversationDAO():
         cur.execute(
                 "SELECT id from conversations where \"thread_path\" = '{0}';".format(thread_path))
         conversation_id = cur.fetchone()
-        print(conversation_id)
         if conversation_id is None:
             cur.execute(
                 "INSERT INTO conversations (thread_path) VALUES ('{0}') RETURNING id;".format(thread_path))

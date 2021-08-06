@@ -24,8 +24,8 @@ def before_request():
     cur.execute(
         "CREATE TABLE IF NOT EXISTS conversations (id SERIAL, thread_path VARCHAR(255) NOT NULL, UNIQUE(thread_path), PRIMARY KEY (id));")
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS participants (id SERIAL, name VARCHAR(255) NOT NULL, PRIMARY KEY (id));")
-    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, date TIMESTAMP NOT NULL, message VARCHAR(64000), conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE);")
+        "CREATE TABLE IF NOT EXISTS participants (id SERIAL, name VARCHAR(255) NOT NULL, UNIQUE(name), PRIMARY KEY (id));")
+    cur.execute("CREATE TABLE IF NOT EXISTS messages (id SERIAL, date TIMESTAMP NOT NULL, message VARCHAR(64000), conversation_id INTEGER NOT NULL, sender_participant_id INTEGER NOT NULL, PRIMARY KEY (id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE, FOREIGN KEY (sender_participant_id) REFERENCES participants(id) ON DELETE CASCADE);")
     cur.execute(
         "CREATE TABLE IF NOT EXISTS conversations_participants (conversation_id INTEGER NOT NULL, participant_id INTEGER NOT NULL, PRIMARY KEY (conversation_id, participant_id), FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON UPDATE CASCADE, FOREIGN KEY (participant_id) REFERENCES participants(id) ON UPDATE CASCADE);")
     conn.commit()
