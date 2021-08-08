@@ -46,7 +46,7 @@ def show_stats():
 
 @app.route("/add", methods=["POST"])
 def add_stats():
-    file = request.form["file"]
+    folder = request.form["folder"]
     conversation_controller = ConversationController()
-    conversation_controller.add_json_to_db(file)
+    conversation_controller.add_jsons_to_db(folder)
     return {"status": 200}
