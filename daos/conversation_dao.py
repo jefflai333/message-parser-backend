@@ -1,16 +1,13 @@
 import psycopg2
 from .message_dao import MessageDAO
 from .participant_dao import ParticipantDAO
-
-
 class ConversationDAO():
     def __init__(self):
         self.message_dao = MessageDAO()
         self.participant_dao = ParticipantDAO()
 
-    def save_conversation(self, conversation):
-        conn = psycopg2.connect(dbname="test", user="postgres",
-                                password="password", host="localhost", port="5433")
+    def save_conversation(self, conversation, connection_pool):
+        conn = connection_pool.getconn()
         cur = conn.cursor()
         # insert into conversations table
         thread_path = conversation.thread_path
@@ -25,12 +22,12 @@ class ConversationDAO():
             conversation_id = conversation_id[0]
         conn.commit()
         cur.close()
-        conn.close()
+        connection_pool.putconn(conn)
         for participant in conversation.participants:
             self.participant_dao.save_participant_and_conversation_participant(
-                participant, conversation_id)
+                participant, conversation_id, connection_pool)
         for message in conversation.messages:
-            self.message_dao.save_message(message, conversation_id)
+            self.message_dao.save_message(message, conversation_id, connection_pool)
 
     def get_conversation_id(self, thread_path):
         conn = psycopg2.connect(dbname="test", user="postgres",

@@ -11,9 +11,9 @@ class ConversationController:
     def add_json_to_db(self, file):
         conversation = self.conversation_parser.parse_json(file)
         if self.conversation_manager.is_conversation_valid(conversation):
-            status = self.conversation_manager.commit_conversation(
+            self.conversation_manager.commit_conversation(
                 conversation)
-        return {"status": status}
+        #return {"status": status}
 
     def add_jsons_to_db(self, folder):
         # assume that the file path is actually a folder containing .json
