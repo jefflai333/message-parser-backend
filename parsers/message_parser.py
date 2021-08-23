@@ -15,5 +15,6 @@ class MessageParser:
         if "timestamp_ms" in d:
             message.add_date(d["timestamp_ms"])
         if "content" in d:
-            message.add_content(d["content"])
+            message.add_word_count(d["content"])
+            message.add_char_count(d["content"])
         return message

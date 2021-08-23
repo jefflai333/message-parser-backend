@@ -6,7 +6,7 @@ class ParticipantManager:
         pass
 
     def is_valid_participant(self, participant):
-        if getsizeof(participant.name) > 255:
+        if getsizeof(participant) > 255:
             print("Name too long")
             return False
         return True

@@ -7,8 +7,8 @@ class ParticipantParser:
 
     def parse_participant(self, d):
         participant = Participant()
-        if not isinstance(d, dict):
-            return participant
-        if "name" in d:
+        if isinstance(d, str):
+            participant.add_name(d)
+        if isinstance(d, dict) and "name" in d:
             participant.add_name(d["name"])
         return participant
