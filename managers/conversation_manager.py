@@ -22,22 +22,23 @@ class ConversationManager:
         return connection_pool
     
     def is_conversation_valid(self, conversation):
-        requiredAttrs = ["participants", "messages", "thread_path"]
+        # participants are now derived from messages, so the participants array isn't needed anymore
+        requiredAttrs = ["messages", "thread_path"]
         for attrs in requiredAttrs:
             if not hasattr(conversation, attrs):
                 return False
         if conversation.thread_path is None:
             print("thread_path doesn't exist")
             return False
-        participants = []
-        for participant in conversation.participants:
+        participants = set()
+        for message in conversation.messages:
+            if not self.message_manager.is_valid_message(message):
+                print("error with message validation")
+                return False
+            participants.add(message.sender_name)
+        for participant in participants:
             if not self.participant_manager.is_valid_participant(participant):
                 print("error with participant validation")
-                return False
-            participants.append(participant.name)
-        for message in conversation.messages:
-            if not self.message_manager.is_valid_message(message, participants):
-                print("error with message validation")
                 return False
         return True
 
